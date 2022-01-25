@@ -1,0 +1,51 @@
+[[package]]
+name = "all-repos"
+version = "1.21.3"
+description = "Clone all your repositories and apply sweeping changes."
+category = "main"
+optional = false
+python-versions = ">=3.6.1"
+
+[package.dependencies]
+identify = "*"
+
+[[package]]
+name = "all-repos-envvar"
+version = "0.1.0"
+description = "An all-repos extension to read values from environment variables."
+category = "main"
+optional = false
+python-versions = ">=3.7,<4.0"
+
+[package.dependencies]
+all-repos = ">=1"
+
+[[package]]
+name = "identify"
+version = "2.4.5"
+description = "File identification library for Python"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.extras]
+license = ["ukkonen"]
+
+[metadata]
+lock-version = "1.1"
+python-versions = "^3.8"
+content-hash = "e9e59f619031489afacfb05aa59739211aa5cca2b5a778162a405e13df75b000"
+
+[metadata.files]
+all-repos = [
+    {file = "all_repos-1.21.3-py2.py3-none-any.whl", hash = "sha256:45ee2783d1b7a8fe1dff616f160786ed819a4d3b0f3486ad6dd43b1cd6b39344"},
+    {file = "all_repos-1.21.3.tar.gz", hash = "sha256:65e914237cc779cc2a5179204ebec943dfccae480b30fb5db6f4e22d87548861"},
+]
+all-repos-envvar = [
+    {file = "all-repos-envvar-0.1.0.tar.gz", hash = "sha256:764797a8a31b87c89d669d4074fddba6fa899f3d87d0482f5f592a779b7d33af"},
+    {file = "all_repos_envvar-0.1.0-py3-none-any.whl", hash = "sha256:6d7eef042ec425730747b240242b3fe0e57c6e18dc691b49a5df72f795c60db6"},
+]
+identify = [
+    {file = "identify-2.4.5-py2.py3-none-any.whl", hash = "sha256:d27d10099844741c277b45d809bd452db0d70a9b41ea3cd93799ebbbcc6dcb29"},
+    {file = "identify-2.4.5.tar.gz", hash = "sha256:d11469ff952a4d7fd7f9be520d335dc450f585d474b39b5dfb86a500831ab6c7"},
+]
