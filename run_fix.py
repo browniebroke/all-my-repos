@@ -1,5 +1,6 @@
 from __future__ import annotations
 import argparse
+import re
 from pathlib import Path
 
 from all_repos import autofix_lib
@@ -7,28 +8,22 @@ from all_repos.grep import repos_matching
 
 
 def find_repos(config) -> set[str]:
-    repos = repos_matching(config, ("jobs:", "--", ".github/workflows/ci.yml"))
+    repos = repos_matching(config, ("black =", "--", "pyproject.toml"))
     return repos
 
 
 def apply_fix():
-    ci_path = Path(".github/workflows/ci.yml")
-    content = ci_path.read_text()
-    if "concurrency:" in content:
+    pyproject_toml = Path("pyproject.toml")
+    content = pyproject_toml.read_text()
+    if 'black = {version = "^22.1"' in content or 'black = "^22.1"' in content:
         return
     content = content.replace(
-        "jobs:",
-        "\n".join(
-            [
-                "concurrency:",
-                "  group: ${{ github.head_ref || github.run_id }}",
-                "  cancel-in-progress: true",
-                "",
-                "jobs:",
-            ]
-        ),
+        'black = {version = "^21.9b0"',
+        'black = {version = "^22.1"'
     )
-    ci_path.write_text(content)
+    content = re.sub(r'black = ".+"', 'black = "^22.1"', content)
+    pyproject_toml.write_text(content)
+    autofix_lib.run("poetry", "lock")
 
 
 def main(argv=None):
@@ -39,10 +34,9 @@ def main(argv=None):
     repos, config, commit, autofix_settings = autofix_lib.from_cli(
         args,
         find_repos=find_repos,
-        msg="ci: avoid concurrent CI runs",
-        branch_name="concurrent-ci",
+        msg="chore: upgrade to black stable",
+        branch_name="upgrade-black-stable",
     )
-    print(repos)
     autofix_lib.fix(
         repos,
         apply_fix=apply_fix,
