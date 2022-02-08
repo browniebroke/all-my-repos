@@ -10,6 +10,7 @@ from all_repos.grep import repos_matching
 
 def find_repos(config) -> set[str]:
     repos = repos_matching(config, ('python = "^3.6"', "--", "pyproject.toml"))
+    print(repos)
     return repos
 
 
