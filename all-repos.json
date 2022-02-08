@@ -4,7 +4,7 @@
     "source_settings":  {
         "username": "browniebroke"
     },
-    "include": "browniebroke",
+    "include": "browniebroke|LesCapsules|cozinhadosbonitos",
     "push": "all_repos_envvar.push",
     "push_settings": {
         "username": "browniebroke"

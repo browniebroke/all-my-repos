@@ -1,16 +1,34 @@
 from __future__ import annotations
 import argparse
+from pathlib import Path
 
 from all_repos import autofix_lib
 from all_repos.grep import repos_matching
 
 
 def find_repos(config) -> set[str]:
-    return repos_matching(config, ("[tox]", "--", "tox.ini"))
+    repos = repos_matching(config, ("jobs:", "--", ".github/workflows/ci.yml"))
+    return repos
 
 
 def apply_fix():
-    autofix_lib.run("rm", "tox.ini")
+    ci_path = Path(".github/workflows/ci.yml")
+    content = ci_path.read_text()
+    if "concurrency:" in content:
+        return
+    content = content.replace(
+        "jobs:",
+        "\n".join(
+            [
+                "concurrency:",
+                "  group: ${{ github.head_ref || github.run_id }}",
+                "  cancel-in-progress: true",
+                "",
+                "jobs:",
+            ]
+        ),
+    )
+    ci_path.write_text(content)
 
 
 def main(argv=None):
@@ -21,8 +39,8 @@ def main(argv=None):
     repos, config, commit, autofix_settings = autofix_lib.from_cli(
         args,
         find_repos=find_repos,
-        msg="chore: remove tox file",
-        branch_name="remove-tox",
+        msg="ci: avoid concurrent CI runs",
+        branch_name="concurrent-ci",
     )
     print(repos)
     autofix_lib.fix(
