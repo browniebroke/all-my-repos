@@ -5,6 +5,7 @@
         "username": "browniebroke"
     },
     "include": "browniebroke|LesCapsules|cozinhadosbonitos",
+    "exclude": "pre-commit-autoupdate-action|deploy-lighthouse-report-action|yarn-upgrade-action|github-app-test|ip-mirror|dailycodingproblem|macbook-scripts|actions-playground",
     "push": "all_repos_envvar.push",
     "push_settings": {
         "username": "browniebroke"
