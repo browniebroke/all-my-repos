@@ -6,11 +6,11 @@ from all_repos.grep import repos_matching
 
 
 def find_repos(config) -> set[str]:
-    return repos_matching(config, ("pytest-srcpaths", "--", "pyproject.toml"))
+    return repos_matching(config, ("[tox]", "--", "tox.ini"))
 
 
 def apply_fix():
-    autofix_lib.run("poetry", "remove", "-D", "pytest-srcpaths")
+    autofix_lib.run("rm", "tox.ini")
 
 
 def main(argv=None):
@@ -21,8 +21,8 @@ def main(argv=None):
     repos, config, commit, autofix_settings = autofix_lib.from_cli(
         args,
         find_repos=find_repos,
-        msg="chore(deps): remove pytest-srcpaths",
-        branch_name="deps/remove-pytest-srcpaths",
+        msg="chore: remove tox file",
+        branch_name="remove-tox",
     )
     print(repos)
     autofix_lib.fix(
