@@ -9,7 +9,7 @@ from all_repos.grep import repos_matching
 
 
 def find_repos(config) -> set[str]:
-    repos = repos_matching(config, ('python = "^3.6"', "--", "pyproject.toml"))
+    repos = repos_matching(config, ("pyupgrade =", "--", "pyproject.toml"))
     print(repos)
     return repos
 
@@ -17,9 +17,9 @@ def find_repos(config) -> set[str]:
 def apply_fix():
     pyproject_toml = Path("pyproject.toml")
     content = pyproject_toml.read_text()
-    if 'python = "^3.7"' in content:
+    if 'pyupgrade = "^2.31"' in content:
         return
-    content = content.replace('python = "^3.6"', 'python = "^3.7"')
+    content = re.sub(r'pyupgrade = ".+"', 'pyupgrade = "^2.31"', content)
     pyproject_toml.write_text(content)
     autofix_lib.run("poetry", "lock")
 
@@ -32,8 +32,8 @@ def main(argv=None):
     repos, config, commit, autofix_settings = autofix_lib.from_cli(
         args,
         find_repos=find_repos,
-        msg="feat: drop Python 3.6",
-        branch_name="drop-python3.6",
+        msg="chore: upgrade to latest pyupgrade",
+        branch_name="upgrade-pyupgrade",
     )
     autofix_lib.fix(
         repos,
