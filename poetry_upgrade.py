@@ -1,26 +1,20 @@
 from __future__ import annotations
 
 import argparse
-import re
-from pathlib import Path
 
 from all_repos import autofix_lib
 from all_repos.grep import repos_matching
 
 
 def find_repos(config) -> set[str]:
-    repos = repos_matching(config, ('python = "^3.6"', "--", "pyproject.toml"))
-    return repos
+    return repos_matching(
+        config, ('=', "--", "poetry.lock")
+    )
 
 
 def apply_fix():
-    pyproject_toml = Path("pyproject.toml")
-    content = pyproject_toml.read_text()
-    if 'python = "^3.7"' in content:
-        return
-    content = content.replace('python = "^3.6"', 'python = "^3.7"')
-    pyproject_toml.write_text(content)
-    autofix_lib.run("poetry", "lock")
+    autofix_lib.run("rm", "poetry.lock")
+    autofix_lib.run("poetry", "lock", "-n")
 
 
 def main(argv=None):
@@ -31,8 +25,8 @@ def main(argv=None):
     repos, config, commit, autofix_settings = autofix_lib.from_cli(
         args,
         find_repos=find_repos,
-        msg="feat: drop Python 3.6",
-        branch_name="drop-python3.6",
+        msg="chore: update dependencies",
+        branch_name="poetry-date",
     )
     autofix_lib.fix(
         repos,
