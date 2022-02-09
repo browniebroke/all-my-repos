@@ -9,19 +9,30 @@ from all_repos.grep import repos_matching
 
 
 def find_repos(config) -> set[str]:
-    repos = repos_matching(config, ("pyupgrade =", "--", "pyproject.toml"))
+    repos = repos_matching(config, ("=", "--", "poetry.lock"))
     print(repos)
     return repos
 
 
 def apply_fix():
-    pyproject_toml = Path("pyproject.toml")
-    content = pyproject_toml.read_text()
-    if 'pyupgrade = "^2.31"' in content:
+    pre_commit_config = Path(".pre-commit-config.yaml")
+    if not pre_commit_config.exists():
         return
-    content = re.sub(r'pyupgrade = ".+"', 'pyupgrade = "^2.31"', content)
-    pyproject_toml.write_text(content)
-    autofix_lib.run("poetry", "lock")
+    content = pre_commit_config.read_text()
+    if "repo: https://github.com/PyCQA/bandit" in content:
+        return
+
+    content += "\n".join(
+        [
+            "  - repo: https://github.com/PyCQA/bandit",
+            "    rev: 1.7.2",
+            "    hooks:",
+            "      - id: bandit",
+            "        args: [-x, tests]",
+            "",
+        ]
+    )
+    pre_commit_config.write_text(content)
 
 
 def main(argv=None):
@@ -32,8 +43,8 @@ def main(argv=None):
     repos, config, commit, autofix_settings = autofix_lib.from_cli(
         args,
         find_repos=find_repos,
-        msg="chore: upgrade to latest pyupgrade",
-        branch_name="upgrade-pyupgrade",
+        msg="chore: add bandit to pre-commit config",
+        branch_name="pre-commit-bandit-2",
     )
     autofix_lib.fix(
         repos,
