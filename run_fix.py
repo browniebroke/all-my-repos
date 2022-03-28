@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import re
 from pathlib import Path
 
@@ -10,50 +11,25 @@ from all_repos.grep import repos_matching
 
 
 def find_repos(config) -> set[str]:
-    repos = repos_matching(config, ("=", "--", "poetry.lock"))
+    repos = repos_matching(
+        config, ("github>browniebroke/renovate-configs:js-app", "--", "package.json")
+    )
     print(repos)
     return repos
 
 
 def apply_fix():
-    pyproject_toml = Path("pyproject.toml")
-    content = pyproject_toml.read_text()
-    pyproject_config = tomli.loads(content)
-    deps = pyproject_config["tool"]["poetry"]["dependencies"]
-    dev_deps = pyproject_config["tool"]["poetry"]["dev-dependencies"]
-    all_deps = {**deps, **dev_deps}
-    for package, version_spec in all_deps.items():
-        if package == "python":
-            continue
-        if isinstance(version_spec, dict):
-            version = version_spec['version']
-            digits = version.split(".")
-            if digits[0].lstrip("^>=<") > "0" and len(digits) > 2:
-                # patch specified for non zero-ver package
-                updated_version = ".".join(digits[:2])
-                content = content.replace(
-                    ' = {version =',
-                    ' = { version =',
-                )
-                content = content.replace(
-                    'optional = true}',
-                    'optional = true }',
-                )
-                content = content.replace(
-                    package + ' = { version = "' + version + '"',
-                    package + ' = { version = "' + updated_version + '"',
-                )
-        else:
-            digits = version_spec.split(".")
-            if digits[0].lstrip("^>=<") > "0" and len(digits) > 2:
-                # patch specified for non zero-ver package
-                updated_version = ".".join(digits[:2])
-                content = content.replace(
-                    f'{package} = "{version_spec}"',
-                    f'{package} = "{updated_version}"',
-                )
-    pyproject_toml.write_text(content)
-    autofix_lib.run("poetry", "lock", "--no-update")
+    if "nwtgck/actions-netlify" in Path(".github/workflows/ci.yml").read_text():
+        return
+    package_json_path = Path("package.json")
+    content = package_json_path.read_text()
+    package_json_config = json.loads(content)
+    package_json_config["renovate"]["extends"].append(
+        "github>browniebroke/renovate-configs:netlify"
+    )
+    updated_content = json.dumps(package_json_config, indent=2, ensure_ascii=False)
+    package_json_path.write_text(f"{updated_content}\n")
+    autofix_lib.run("/usr/local/bin/prettier", "--write", "package.json")
 
 
 def main(argv=None):
@@ -64,8 +40,8 @@ def main(argv=None):
     repos, config, commit, autofix_settings = autofix_lib.from_cli(
         args,
         find_repos=find_repos,
-        msg="chore: drop patch version for all stable dependencies",
-        branch_name="drop-patch",
+        msg="chore: update renovate config",
+        branch_name="chore/update-renovate",
     )
     autofix_lib.fix(
         repos,
