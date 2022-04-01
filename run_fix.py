@@ -4,6 +4,7 @@ import argparse
 import json
 import re
 from pathlib import Path
+from random import randint
 
 import tomli
 from all_repos import autofix_lib
@@ -11,25 +12,36 @@ from all_repos.grep import repos_matching
 
 
 def find_repos(config) -> set[str]:
-    repos = repos_matching(
-        config, ("github>browniebroke/renovate-configs:js-app", "--", "package.json")
-    )
+    repos = repos_matching(config, (":", "--", "package-lock.json"))
     print(repos)
     return repos
 
 
+CONTENT_TEMPLATE = """name: Upgrader
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '[[MINUTE]] [[HOUR]] [[DAY]] * *'
+
+jobs:
+  upgrade:
+    uses: browniebroke/github-actions/.github/workflows/npm-upgrade.yml@v1
+    secrets:
+      gh_pat: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
+"""
+
+
 def apply_fix():
-    if "nwtgck/actions-netlify" in Path(".github/workflows/ci.yml").read_text():
+    workflow_file = Path(".github/workflows/npm-upgrade.yml")
+    if workflow_file.exists():
         return
-    package_json_path = Path("package.json")
-    content = package_json_path.read_text()
-    package_json_config = json.loads(content)
-    package_json_config["renovate"]["extends"].append(
-        "github>browniebroke/renovate-configs:netlify"
-    )
-    updated_content = json.dumps(package_json_config, indent=2, ensure_ascii=False)
-    package_json_path.write_text(f"{updated_content}\n")
-    autofix_lib.run("/usr/local/bin/prettier", "--write", "package.json")
+    content = CONTENT_TEMPLATE.replace("[[MINUTE]]", str(randint(1, 59)))
+    content = content.replace("[[HOUR]]", str(randint(1, 23)))
+    content = content.replace("[[DAY]]", str(randint(1, 28)))
+    workflow_file.touch()
+    workflow_file.write_text(content)
+    autofix_lib.run('git', 'add', str(workflow_file))
 
 
 def main(argv=None):
@@ -40,8 +52,8 @@ def main(argv=None):
     repos, config, commit, autofix_settings = autofix_lib.from_cli(
         args,
         find_repos=find_repos,
-        msg="chore: update renovate config",
-        branch_name="chore/update-renovate",
+        msg="chore: add npm-upgrade workflow",
+        branch_name="chore/npm-upgrade",
     )
     autofix_lib.fix(
         repos,
