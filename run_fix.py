@@ -11,37 +11,53 @@ from all_repos import autofix_lib
 from all_repos.grep import repos_matching
 
 
+REPLACEMENT = """
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.2.0
+    hooks:
+      - id: debug-statements
+      - id: check-builtin-literals
+      - id: check-case-conflict
+      - id: check-docstring-first
+      - id: check-json
+      - id: check-toml
+      - id: check-xml
+      - id: check-yaml
+      - id: detect-private-key
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+"""
+replacement_lines = [li for li in REPLACEMENT.split("\n") if li]
+
+
 def find_repos(config) -> set[str]:
-    repos = repos_matching(config, ("=", "--", "poetry.lock"))
+    repos = repos_matching(
+        config,
+        (
+            "https://github.com/pre-commit/pre-commit-hooks",
+            "--",
+            ".pre-commit-config.yaml",
+        ),
+    )
     print(repos)
     return repos
 
 
-CONTENT_TEMPLATE = """name: Upgrader
-
-on:
-  workflow_dispatch:
-  schedule:
-    - cron: "[[MINUTE]] [[HOUR]] [[DAY]] * *"
-
-jobs:
-  upgrade:
-    uses: browniebroke/github-actions/.github/workflows/poetry-upgrade.yml@v1
-    secrets:
-      gh_pat: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
-"""
-
-
 def apply_fix():
-    workflow_file = Path(".github/workflows/poetry-upgrade.yml")
-    if workflow_file.exists():
+    config_file = Path(".pre-commit-config.yaml")
+    config_text = config_file.read_text()
+    if "- id: check-docstring-first" in config_text:
         return
-    content = CONTENT_TEMPLATE.replace("[[MINUTE]]", str(randint(1, 59)))
-    content = content.replace("[[HOUR]]", str(randint(1, 23)))
-    content = content.replace("[[DAY]]", str(randint(1, 28)))
-    workflow_file.parent.mkdir(parents=True, exist_ok=True)
-    workflow_file.write_text(content)
-    autofix_lib.run('git', 'add', str(workflow_file))
+    lines = config_text.split("\n")
+    start = lines.index("  - repo: https://github.com/pre-commit/pre-commit-hooks")
+    offset = 0
+    for line_nb, line in enumerate(lines[start + 1 :]):
+        if line.startswith("  - repo:"):
+            offset = line_nb
+            break
+    updated_lines = [*lines[:start], *replacement_lines, *lines[start + offset :]]
+    print(updated_lines)
+    config_file.write_text("\n".join(updated_lines))
 
 
 def main(argv=None):
@@ -52,8 +68,8 @@ def main(argv=None):
     repos, config, commit, autofix_settings = autofix_lib.from_cli(
         args,
         find_repos=find_repos,
-        msg="chore: add poetry-upgrade workflow",
-        branch_name="chore/poetry-upgrade-workflow",
+        msg="chore: add more pre-commit hooks",
+        branch_name="chore/pre-commit-hooks-config",
     )
     autofix_lib.fix(
         repos,
