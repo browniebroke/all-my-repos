@@ -11,22 +11,13 @@ from all_repos import autofix_lib
 from all_repos.grep import repos_matching
 
 
-TO_INSERT = """
-  - repo: https://github.com/codespell-project/codespell
-    rev: v2.1.0
-    hooks:
-      - id: codespell
-"""
-lines_to_insert = [li for li in TO_INSERT.split("\n") if li]
-
-
 def find_repos(config) -> set[str]:
     repos = repos_matching(
         config,
         (
-            "PyCQA/flake8",
+            "black = ",
             "--",
-            ".pre-commit-config.yaml",
+            "pyproject.toml",
         ),
     )
     print(repos)
@@ -34,19 +25,15 @@ def find_repos(config) -> set[str]:
 
 
 def apply_fix():
-    config_file = Path(".pre-commit-config.yaml")
-    config_text = config_file.read_text()
-    if "- id: codespell" in config_text:
-        return
-    lines = config_text.split("\n")
-    insert_at = lines.index("  - repo: https://github.com/PyCQA/flake8")
-    updated_lines = [
-        *lines[:insert_at],
-        *lines_to_insert,
-        *lines[insert_at:],
-    ]
-    print(updated_lines)
-    config_file.write_text("\n".join(updated_lines))
+    autofix_lib.run(
+        "poetry",
+        "remove",
+        "-D",
+        "black",
+        "flake8",
+        "pyupgrade",
+        "isort",
+    )
 
 
 def main(argv=None):
@@ -57,8 +44,8 @@ def main(argv=None):
     repos, config, commit, autofix_settings = autofix_lib.from_cli(
         args,
         find_repos=find_repos,
-        msg="chore: add codespell to pre-commit hooks",
-        branch_name="chore/codespell",
+        msg="chore: remove linting deps from dev dependencies",
+        branch_name="cleanup/linting",
     )
     autofix_lib.fix(
         repos,
