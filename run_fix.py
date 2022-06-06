@@ -10,14 +10,16 @@ import tomli
 from all_repos import autofix_lib
 from all_repos.grep import repos_matching
 
+PACKAGE = "bandit"
+
 
 def find_repos(config) -> set[str]:
     repos = repos_matching(
         config,
         (
-            "relekang/python-semantic-release@v7.29",
+            f"{PACKAGE} = ",
             "--",
-            ".github/workflows/ci.yml",
+            "pyproject.toml",
         ),
     )
     print(repos)
@@ -25,22 +27,12 @@ def find_repos(config) -> set[str]:
 
 
 def apply_fix():
-    ci_workflow = Path(".github/workflows/ci.yml")
-    content = ci_workflow.read_text()
-    content = content.replace(
-        "relekang/python-semantic-release@v7.29.1",
-        "relekang/python-semantic-release@v7.28.1",
+    autofix_lib.run(
+        "poetry",
+        "remove",
+        "-D",
+        PACKAGE,
     )
-    ci_workflow.write_text(content)
-
-    sr_workflow = Path(".github/workflows/semantic-release.yml")
-    if sr_workflow.exists():
-        content = sr_workflow.read_text()
-        content = content.replace(
-            "relekang/python-semantic-release@v7.29.1",
-            "relekang/python-semantic-release@v7.28.1",
-        )
-        sr_workflow.write_text(content)
 
 
 def main(argv=None):
@@ -51,8 +43,8 @@ def main(argv=None):
     repos, config, commit, autofix_settings = autofix_lib.from_cli(
         args,
         find_repos=find_repos,
-        msg="fix(deps): revert PSR upgrade",
-        branch_name="fix/revert-psr-upgrade",
+        msg=f"chore: remove {PACKAGE} from dev dependencies",
+        branch_name=f"remove/{PACKAGE}",
     )
     autofix_lib.fix(
         repos,
