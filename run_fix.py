@@ -10,7 +10,7 @@ import tomli
 from all_repos import autofix_lib
 from all_repos.grep import repos_matching
 
-PACKAGE = "bandit"
+PACKAGE = "tox"
 
 
 def find_repos(config) -> set[str]:
