@@ -15,9 +15,9 @@ def find_repos(config) -> set[str]:
     repos = repos_matching(
         config,
         (
-            "black = ",
+            "relekang/python-semantic-release@v7.29",
             "--",
-            "pyproject.toml",
+            ".github/workflows/ci.yml",
         ),
     )
     print(repos)
@@ -25,15 +25,22 @@ def find_repos(config) -> set[str]:
 
 
 def apply_fix():
-    autofix_lib.run(
-        "poetry",
-        "remove",
-        "-D",
-        "black",
-        "flake8",
-        "pyupgrade",
-        "isort",
+    ci_workflow = Path(".github/workflows/ci.yml")
+    content = ci_workflow.read_text()
+    content = content.replace(
+        "relekang/python-semantic-release@v7.29.1",
+        "relekang/python-semantic-release@v7.28.1",
     )
+    ci_workflow.write_text(content)
+
+    sr_workflow = Path(".github/workflows/semantic-release.yml")
+    if sr_workflow.exists():
+        content = sr_workflow.read_text()
+        content = content.replace(
+            "relekang/python-semantic-release@v7.29.1",
+            "relekang/python-semantic-release@v7.28.1",
+        )
+        sr_workflow.write_text(content)
 
 
 def main(argv=None):
@@ -44,8 +51,8 @@ def main(argv=None):
     repos, config, commit, autofix_settings = autofix_lib.from_cli(
         args,
         find_repos=find_repos,
-        msg="chore: remove linting deps from dev dependencies",
-        branch_name="cleanup/linting",
+        msg="fix(deps): revert PSR upgrade",
+        branch_name="fix/revert-psr-upgrade",
     )
     autofix_lib.fix(
         repos,
