@@ -1,6 +1,6 @@
 [[package]]
 name = "all-repos"
-version = "1.22.0"
+version = "1.23.0"
 description = "Clone all your repositories and apply sweeping changes."
 category = "main"
 optional = false
@@ -11,7 +11,7 @@ identify = "*"
 
 [[package]]
 name = "all-repos-envvar"
-version = "0.2.0"
+version = "0.2.1"
 description = "An all-repos extension to read values from environment variables."
 category = "main"
 optional = false
@@ -52,7 +52,7 @@ license = ["ukkonen"]
 
 [[package]]
 name = "marshmallow"
-version = "3.16.0"
+version = "3.17.0"
 description = "A lightweight library for converting complex datatypes to and from native Python datatypes."
 category = "main"
 optional = false
@@ -62,9 +62,9 @@ python-versions = ">=3.7"
 packaging = ">=17.0"
 
 [package.extras]
-dev = ["pytest", "pytz", "simplejson", "mypy (==0.960)", "flake8 (==4.0.1)", "flake8-bugbear (==22.4.25)", "pre-commit (>=2.4,<3.0)", "tox"]
+dev = ["pytest", "pytz", "simplejson", "mypy (==0.961)", "flake8 (==4.0.1)", "flake8-bugbear (==22.6.22)", "pre-commit (>=2.4,<3.0)", "tox"]
 docs = ["sphinx (==4.5.0)", "sphinx-issues (==3.0.1)", "alabaster (==0.7.12)", "sphinx-version-warning (==1.1.2)", "autodocsumm (==0.2.8)"]
-lint = ["mypy (==0.960)", "flake8 (==4.0.1)", "flake8-bugbear (==22.4.25)", "pre-commit (>=2.4,<3.0)"]
+lint = ["mypy (==0.961)", "flake8 (==4.0.1)", "flake8-bugbear (==22.6.22)", "pre-commit (>=2.4,<3.0)"]
 tests = ["pytest", "pytz", "simplejson"]
 
 [[package]]
@@ -115,12 +115,12 @@ content-hash = "508d9d6da167ae8124da6d178ca92204f1afe3e8d46b6da2733e7c7783aedb4c
 
 [metadata.files]
 all-repos = [
-    {file = "all_repos-1.22.0-py2.py3-none-any.whl", hash = "sha256:b84354d0390b56205aaf1051a0cd48e77b1c4d2eafe6292a567ddd1a6e2839e1"},
-    {file = "all_repos-1.22.0.tar.gz", hash = "sha256:cd65a4a409b367bb888245c1d8011295789691b4bed63ca79e650cfbed78c649"},
+    {file = "all_repos-1.23.0-py2.py3-none-any.whl", hash = "sha256:2e5a127ef09de444e559b367671e651482e8d557eae5a7029616da029cb8e197"},
+    {file = "all_repos-1.23.0.tar.gz", hash = "sha256:5ecba787dfbacd45632cfcba53ab01a1d81a52633ceb7555a0f81d1325fdcc70"},
 ]
 all-repos-envvar = [
-    {file = "all-repos-envvar-0.2.0.tar.gz", hash = "sha256:68e9f1a50c1c214f685a0240bc3c81d0ad8f64121527ac9874e19b7ea85a861a"},
-    {file = "all_repos_envvar-0.2.0-py3-none-any.whl", hash = "sha256:e00f4d00ee5a58a1dd646018d4d47d97389ae0999d01e4abbeb2f47f66207a56"},
+    {file = "all-repos-envvar-0.2.1.tar.gz", hash = "sha256:6940f505a79c4d3505b32fd72e2bf9a50bc5e6189c05d04988f41d5dec43a948"},
+    {file = "all_repos_envvar-0.2.1-py3-none-any.whl", hash = "sha256:c5198a2f5534c524d7398739eb7274c9c41c0ef4fdbd9413dbfaea02fd070719"},
 ]
 environs = [
     {file = "environs-9.5.0-py2.py3-none-any.whl", hash = "sha256:1e549569a3de49c05f856f40bce86979e7d5ffbbc4398e7f338574c220189124"},
@@ -131,8 +131,8 @@ identify = [
     {file = "identify-2.5.1.tar.gz", hash = "sha256:3d11b16f3fe19f52039fb7e39c9c884b21cb1b586988114fbe42671f03de3e82"},
 ]
 marshmallow = [
-    {file = "marshmallow-3.16.0-py3-none-any.whl", hash = "sha256:53a1e0ee69f79e1f3e80d17393b25cfc917eda52f859e8183b4af72c3390c1f1"},
-    {file = "marshmallow-3.16.0.tar.gz", hash = "sha256:a762c1d8b2bcb0e5c8e964850d03f9f3bffd6a12b626f3c14b9d6b1841999af5"},
+    {file = "marshmallow-3.17.0-py3-none-any.whl", hash = "sha256:00040ab5ea0c608e8787137627a8efae97fabd60552a05dc889c888f814e75eb"},
+    {file = "marshmallow-3.17.0.tar.gz", hash = "sha256:635fb65a3285a31a30f276f30e958070f5214c7196202caa5c7ecf28f5274bc7"},
 ]
 packaging = [
     {file = "packaging-21.3-py3-none-any.whl", hash = "sha256:ef103e05f519cdc783ae24ea4e2e0f508a9c99b2d4969652eed6a2e1ea5bd522"},
