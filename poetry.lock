@@ -41,7 +41,7 @@ tests = ["pytest", "dj-database-url", "dj-email-url", "django-cache-url"]
 
 [[package]]
 name = "identify"
-version = "2.5.1"
+version = "2.5.3"
 description = "File identification library for Python"
 category = "main"
 optional = false
@@ -127,8 +127,8 @@ environs = [
     {file = "environs-9.5.0.tar.gz", hash = "sha256:a76307b36fbe856bdca7ee9161e6c466fd7fcffc297109a118c59b54e27e30c9"},
 ]
 identify = [
-    {file = "identify-2.5.1-py2.py3-none-any.whl", hash = "sha256:0dca2ea3e4381c435ef9c33ba100a78a9b40c0bab11189c7cf121f75815efeaa"},
-    {file = "identify-2.5.1.tar.gz", hash = "sha256:3d11b16f3fe19f52039fb7e39c9c884b21cb1b586988114fbe42671f03de3e82"},
+    {file = "identify-2.5.3-py2.py3-none-any.whl", hash = "sha256:25851c8c1370effb22aaa3c987b30449e9ff0cece408f810ae6ce408fdd20893"},
+    {file = "identify-2.5.3.tar.gz", hash = "sha256:887e7b91a1be152b0d46bbf072130235a8117392b9f1828446079a816a05ef44"},
 ]
 marshmallow = [
     {file = "marshmallow-3.17.0-py3-none-any.whl", hash = "sha256:00040ab5ea0c608e8787137627a8efae97fabd60552a05dc889c888f814e75eb"},
