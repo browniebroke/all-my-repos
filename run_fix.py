@@ -10,16 +10,14 @@ import tomli
 from all_repos import autofix_lib
 from all_repos.grep import repos_matching
 
-PACKAGE = "tox"
-
 
 def find_repos(config) -> set[str]:
     repos = repos_matching(
         config,
         (
-            f"{PACKAGE} = ",
+            f"example:",
             "--",
-            "pyproject.toml",
+            ".github/workflows/hacktoberfest.yml",
         ),
     )
     print(repos)
@@ -27,12 +25,11 @@ def find_repos(config) -> set[str]:
 
 
 def apply_fix():
-    autofix_lib.run(
-        "poetry",
-        "remove",
-        "-D",
-        PACKAGE,
-    )
+    file_path = Path(".github/workflows/hacktoberfest.yml")
+    file_content = file_path.read_text()
+    file_content = file_content.replace("  example:", "  hacktoberfest:")
+    file_path.write_text(file_content)
+
 
 
 def main(argv=None):
@@ -43,8 +40,8 @@ def main(argv=None):
     repos, config, commit, autofix_settings = autofix_lib.from_cli(
         args,
         find_repos=find_repos,
-        msg=f"chore: remove {PACKAGE} from dev dependencies",
-        branch_name=f"remove/{PACKAGE}",
+        msg=f"chore: update hacktoberfest workflow",
+        branch_name=f"update-hacktoberfest-workflow",
     )
     autofix_lib.fix(
         repos,
