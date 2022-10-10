@@ -15,9 +15,9 @@ def find_repos(config) -> set[str]:
     repos = repos_matching(
         config,
         (
-            f"example:",
+            f"snok/install-poetry",
             "--",
-            ".github/workflows/hacktoberfest.yml",
+            ".github/workflows/ci.yml",
         ),
     )
     print(repos)
@@ -25,9 +25,14 @@ def find_repos(config) -> set[str]:
 
 
 def apply_fix():
-    file_path = Path(".github/workflows/hacktoberfest.yml")
+    file_path = Path(".github/workflows/ci.yml")
     file_content = file_path.read_text()
-    file_content = file_content.replace("  example:", "  hacktoberfest:")
+    if "snok/install-poetry@v1.3.1" in file_content:
+        return
+    file_content = file_content.replace(
+        "snok/install-poetry@v1",
+        "snok/install-poetry@v1.3.1",
+    )
     file_path.write_text(file_content)
 
 
@@ -40,8 +45,8 @@ def main(argv=None):
     repos, config, commit, autofix_settings = autofix_lib.from_cli(
         args,
         find_repos=find_repos,
-        msg=f"chore: update hacktoberfest workflow",
-        branch_name=f"update-hacktoberfest-workflow",
+        msg=f"chore: reference snok/install-poetry action by full version",
+        branch_name=f"fix/install-poetry-version",
     )
     autofix_lib.fix(
         repos,
