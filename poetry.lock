@@ -1,6 +1,6 @@
 [[package]]
 name = "all-repos"
-version = "1.23.0"
+version = "1.23.1"
 description = "Clone all your repositories and apply sweeping changes."
 category = "main"
 optional = false
@@ -41,7 +41,7 @@ tests = ["dj-database-url", "dj-email-url", "django-cache-url", "pytest"]
 
 [[package]]
 name = "identify"
-version = "2.5.6"
+version = "2.5.8"
 description = "File identification library for Python"
 category = "main"
 optional = false
@@ -115,8 +115,8 @@ content-hash = "508d9d6da167ae8124da6d178ca92204f1afe3e8d46b6da2733e7c7783aedb4c
 
 [metadata.files]
 all-repos = [
-    {file = "all_repos-1.23.0-py2.py3-none-any.whl", hash = "sha256:2e5a127ef09de444e559b367671e651482e8d557eae5a7029616da029cb8e197"},
-    {file = "all_repos-1.23.0.tar.gz", hash = "sha256:5ecba787dfbacd45632cfcba53ab01a1d81a52633ceb7555a0f81d1325fdcc70"},
+    {file = "all_repos-1.23.1-py2.py3-none-any.whl", hash = "sha256:bc8ce7f21652a91480e6458f18522fafadb4fefdff0303f04d2e2b0ed2e682bc"},
+    {file = "all_repos-1.23.1.tar.gz", hash = "sha256:6891c738651f4e0963a67f7ce689fe5efe3ba53b32c39b781da1e2e51decff6d"},
 ]
 all-repos-envvar = [
     {file = "all-repos-envvar-0.2.1.tar.gz", hash = "sha256:6940f505a79c4d3505b32fd72e2bf9a50bc5e6189c05d04988f41d5dec43a948"},
@@ -127,8 +127,8 @@ environs = [
     {file = "environs-9.5.0.tar.gz", hash = "sha256:a76307b36fbe856bdca7ee9161e6c466fd7fcffc297109a118c59b54e27e30c9"},
 ]
 identify = [
-    {file = "identify-2.5.6-py2.py3-none-any.whl", hash = "sha256:b276db7ec52d7e89f5bc4653380e33054ddc803d25875952ad90b0f012cbcdaa"},
-    {file = "identify-2.5.6.tar.gz", hash = "sha256:6c32dbd747aa4ceee1df33f25fed0b0f6e0d65721b15bd151307ff7056d50245"},
+    {file = "identify-2.5.8-py2.py3-none-any.whl", hash = "sha256:48b7925fe122720088aeb7a6c34f17b27e706b72c61070f27fe3789094233440"},
+    {file = "identify-2.5.8.tar.gz", hash = "sha256:7a214a10313b9489a0d61467db2856ae8d0b8306fc923e03a9effa53d8aedc58"},
 ]
 marshmallow = [
     {file = "marshmallow-3.18.0-py3-none-any.whl", hash = "sha256:35e02a3a06899c9119b785c12a22f4cda361745d66a71ab691fd7610202ae104"},
