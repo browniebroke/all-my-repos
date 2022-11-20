@@ -15,9 +15,9 @@ def find_repos(config) -> set[str]:
     repos = repos_matching(
         config,
         (
-            f"python-version:",
+            "tool.poetry.dev-dependencies",
             "--",
-            ".github/workflows/ci.yml",
+            "pyproject.toml",
         ),
     )
     print(repos)
@@ -25,15 +25,20 @@ def find_repos(config) -> set[str]:
 
 
 def apply_fix():
-    ci_yml = Path(".github/workflows/ci.yml")
-    file_content = ci_yml.read_text()
-    if '- "3.11"' in file_content:
-        return
-    file_content = file_content.replace(
-        '          - "3.10"',
-        '          - "3.10"\n          - "3.11"',
-    )
-    ci_yml.write_text(file_content)
+    for file_name in ["pyproject.toml", "project/pyproject.toml"]:
+        pyproject_toml = Path(file_name)
+        if not pyproject_toml.exists():
+            continue
+
+        file_content = pyproject_toml.read_text()
+        if "[tool.poetry.group.dev.dependencies]" in file_content:
+            continue
+
+        file_content = file_content.replace(
+            "[tool.poetry.dev-dependencies]",
+            "[tool.poetry.group.dev.dependencies]",
+        )
+        pyproject_toml.write_text(file_content)
 
 
 def main(argv=None):
@@ -44,8 +49,8 @@ def main(argv=None):
     repos, config, commit, autofix_settings = autofix_lib.from_cli(
         args,
         find_repos=find_repos,
-        msg=f"feat: officially support Python 3.11",
-        branch_name=f"ci/python3.11",
+        msg="chore: update dev-dependencies group to newer notation",
+        branch_name=f"chore/group-dev-dependencies",
     )
     autofix_lib.fix(
         repos,
