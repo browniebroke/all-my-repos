@@ -15,7 +15,7 @@ def find_repos(config) -> set[str]:
     repos = repos_matching(
         config,
         (
-            "snok/install-poetry@v1.3.2",
+            "snok/install-poetry@v1.3.3",
             "--",
             ".github/workflows/ci.yml",
         ),
@@ -27,29 +27,19 @@ def find_repos(config) -> set[str]:
 def apply_fix():
     ci_yml = Path(".github/workflows/ci.yml")
     ci_yml_contents = ci_yml.read_text()
-    if "snok/install-poetry@v1.3.2" not in ci_yml_contents:
+    if (
+        "          - ubuntu-latest\n"
+        "          - windows-latest\n"
+        "          - macOS-latest" in ci_yml_contents
+    ):
         return
-    ci_yml_contents = (
-        ci_yml_contents.replace(
-            "snok/install-poetry@v1.3.2",
-            "snok/install-poetry@v1.3.3",
-        )
-        .replace(
-            "        run: poetry install\n",
-            "        run: poetry install\n        shell: bash\n",
-        )
-        .replace(
-            "        run: poetry run pytest\n",
-            "        run: poetry run pytest\n        shell: bash\n",
-        )
-        .replace(
-            "        run: poetry run pytest --cov-report=xml\n",
-            "        run: poetry run pytest --cov-report=xml\n        shell: bash\n",
-        )
-        .replace(
-            "        run: poetry run pytest --cov=./ --cov-report=xml\n",
-            "        run: poetry run pytest --cov=./ --cov-report=xml\n        shell: bash\n",
-        )
+    ci_yml_contents = ci_yml_contents.replace(
+        # Source
+        "          - ubuntu-latest\n          - macOS-latest",
+        # Replacement
+        "          - ubuntu-latest\n"
+        "          - windows-latest\n"
+        "          - macOS-latest",
     )
     ci_yml.write_text(ci_yml_contents)
 
@@ -62,8 +52,8 @@ def main(argv=None):
     repos, config, commit, autofix_settings = autofix_lib.from_cli(
         args,
         find_repos=find_repos,
-        msg="chore(deps): update snok/install-poetry action to v1.3.3",
-        branch_name=f"chore/update-snok-install-poetry",
+        msg="ci: add windows back to the build matrix",
+        branch_name=f"ci/add-windows",
     )
     autofix_lib.fix(
         repos,
