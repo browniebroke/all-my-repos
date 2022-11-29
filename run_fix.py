@@ -15,9 +15,9 @@ def find_repos(config) -> set[str]:
     repos = repos_matching(
         config,
         (
-            "tool.poetry.dev-dependencies",
+            "treosh/lighthouse-ci-action",
             "--",
-            "pyproject.toml",
+            ".github/workflows/lighthouse.yml",
         ),
     )
     print(repos)
@@ -25,20 +25,7 @@ def find_repos(config) -> set[str]:
 
 
 def apply_fix():
-    for file_name in ["pyproject.toml", "project/pyproject.toml"]:
-        pyproject_toml = Path(file_name)
-        if not pyproject_toml.exists():
-            continue
-
-        file_content = pyproject_toml.read_text()
-        if "[tool.poetry.group.dev.dependencies]" in file_content:
-            continue
-
-        file_content = file_content.replace(
-            "[tool.poetry.dev-dependencies]",
-            "[tool.poetry.group.dev.dependencies]",
-        )
-        pyproject_toml.write_text(file_content)
+    autofix_lib.run("rm", ".github/workflows/lighthouse.yml")
 
 
 def main(argv=None):
@@ -49,8 +36,8 @@ def main(argv=None):
     repos, config, commit, autofix_settings = autofix_lib.from_cli(
         args,
         find_repos=find_repos,
-        msg="chore: update dev-dependencies group to newer notation",
-        branch_name=f"chore/group-dev-dependencies",
+        msg="chore: remove lighthouse workflow",
+        branch_name=f"chore/remove-lighthouse",
     )
     autofix_lib.fix(
         repos,
