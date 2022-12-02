@@ -15,7 +15,7 @@ def find_repos(config) -> set[str]:
     repos = repos_matching(
         config,
         (
-            "poetry.core.masonry.api",
+            "tool.poetry.urls",
             "--",
             "pyproject.toml",
         ),
@@ -24,28 +24,29 @@ def find_repos(config) -> set[str]:
     return repos
 
 
-TO_ADD = "\n".join(
-    [
-        "  - repo: https://github.com/python-poetry/poetry",
-        "    rev: 1.2.2",
-        "    hooks:",
-        "      - id: poetry-check",
-    ]
-)
-
-
 def apply_fix():
-    pre_commit_config_yml = Path(".pre-commit-config.yaml")
-    if not pre_commit_config_yml.exists():
+    pyproject_toml = Path("pyproject.toml")
+    if "Twitter" in (content := pyproject_toml.read_text()):
         return
 
-    pre_commit_config = pre_commit_config_yml.read_text()
-    pre_commit_config = pre_commit_config.replace(
-        "  - repo: https://github.com/pre-commit/mirrors-prettier",
-        f"{TO_ADD}\n  - repo: https://github.com/pre-commit/mirrors-prettier",
-    )
+    lines = content.splitlines()
+    in_section = False
+    out_lines = []
+    for line in lines:
+        if in_section and line == "":
+            out_lines.extend(
+                [
+                    '"Twitter" = "https://twitter.com/_BrunoAlla"',
+                    '"Mastodon" = "https://fosstodon.org/@browniebroke"',
+                ]
+            )
+            in_section = False
+        if line == "[tool.poetry.urls]":
+            in_section = True
+        out_lines.append(line)
 
-    pre_commit_config_yml.write_text(pre_commit_config)
+    out_lines.append("")
+    pyproject_toml.write_text("\n".join(out_lines))
 
 
 def main(argv=None):
@@ -56,8 +57,8 @@ def main(argv=None):
     repos, config, commit, autofix_settings = autofix_lib.from_cli(
         args,
         find_repos=find_repos,
-        msg="chore: add poetry check pre-commit hook",
-        branch_name=f"chore/poetry-check-pre-commit",
+        msg="chore: add links to social media on PyPI",
+        branch_name=f"chore/links-social-media-pypi",
     )
     autofix_lib.fix(
         repos,
