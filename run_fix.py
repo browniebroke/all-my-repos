@@ -15,33 +15,37 @@ def find_repos(config) -> set[str]:
     repos = repos_matching(
         config,
         (
-            "snok/install-poetry@v1.3.3",
+            "poetry.core.masonry.api",
             "--",
-            ".github/workflows/ci.yml",
+            "pyproject.toml",
         ),
     )
     print(repos)
     return repos
 
 
+TO_ADD = "\n".join(
+    [
+        "  - repo: https://github.com/python-poetry/poetry",
+        "    rev: 1.2.2",
+        "    hooks:",
+        "      - id: poetry-check",
+    ]
+)
+
+
 def apply_fix():
-    ci_yml = Path(".github/workflows/ci.yml")
-    ci_yml_contents = ci_yml.read_text()
-    if (
-        "          - ubuntu-latest\n"
-        "          - windows-latest\n"
-        "          - macOS-latest" in ci_yml_contents
-    ):
+    pre_commit_config_yml = Path(".pre-commit-config.yaml")
+    if not pre_commit_config_yml.exists():
         return
-    ci_yml_contents = ci_yml_contents.replace(
-        # Source
-        "          - ubuntu-latest\n          - macOS-latest",
-        # Replacement
-        "          - ubuntu-latest\n"
-        "          - windows-latest\n"
-        "          - macOS-latest",
+
+    pre_commit_config = pre_commit_config_yml.read_text()
+    pre_commit_config = pre_commit_config.replace(
+        "  - repo: https://github.com/pre-commit/mirrors-prettier",
+        f"{TO_ADD}\n  - repo: https://github.com/pre-commit/mirrors-prettier",
     )
-    ci_yml.write_text(ci_yml_contents)
+
+    pre_commit_config_yml.write_text(pre_commit_config)
 
 
 def main(argv=None):
@@ -52,8 +56,8 @@ def main(argv=None):
     repos, config, commit, autofix_settings = autofix_lib.from_cli(
         args,
         find_repos=find_repos,
-        msg="ci: add windows back to the build matrix",
-        branch_name=f"ci/add-windows",
+        msg="chore: add poetry check pre-commit hook",
+        branch_name=f"chore/poetry-check-pre-commit",
     )
     autofix_lib.fix(
         repos,
