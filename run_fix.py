@@ -15,7 +15,7 @@ def find_repos(config) -> set[str]:
     repos = repos_matching(
         config,
         (
-            f"https://img.shields.io/github/workflow/status/",
+            f"/actions?query=workflow%3ACI",
             "--",
             "README.md",
         ),
@@ -27,14 +27,13 @@ def find_repos(config) -> set[str]:
 def apply_fix():
     readme = Path("README.md")
     file_content = readme.read_text()
-    if "https://img.shields.io/github/workflow/status/" not in file_content:
+    if "/actions?query=workflow%3ACI" not in file_content:
         return
 
     file_content = file_content.replace(
-        "https://img.shields.io/github/workflow/status/",
-        "https://img.shields.io/github/actions/workflow/status/",
+        "/actions?query=workflow%3ACI",
+        "/actions/workflows/ci.yml?query=branch%3Amain",
     )
-    file_content = file_content.replace("/CI/main?label=", "/ci.yml?branch=main&label=")
     readme.write_text(file_content)
 
 
@@ -46,8 +45,8 @@ def main(argv=None):
     repos, config, commit, autofix_settings = autofix_lib.from_cli(
         args,
         find_repos=find_repos,
-        msg=f"docs: update badge for CI workflow",
-        branch_name=f"docs/fix-ci-badge",
+        msg=f"docs: update link for CI badge",
+        branch_name=f"docs/fix-ci-badge-link",
     )
     autofix_lib.fix(
         repos,
