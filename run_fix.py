@@ -15,9 +15,9 @@ def find_repos(config) -> set[str]:
     repos = repos_matching(
         config,
         (
-            f"python-version:",
+            f"https://img.shields.io/github/workflow/status/",
             "--",
-            ".github/workflows/ci.yml",
+            "README.md",
         ),
     )
     print(repos)
@@ -25,16 +25,17 @@ def find_repos(config) -> set[str]:
 
 
 def apply_fix():
-    ci_yml = Path(".github/workflows/ci.yml")
-    file_content = ci_yml.read_text()
-    if '- "3.12-dev"' in file_content:
+    readme = Path("README.md")
+    file_content = readme.read_text()
+    if "https://img.shields.io/github/workflow/status/" not in file_content:
         return
 
     file_content = file_content.replace(
-        '          - "3.11"',
-        '          - "3.11"\n          - "3.12-dev"',
+        "https://img.shields.io/github/workflow/status/",
+        "https://img.shields.io/github/actions/workflow/status/",
     )
-    ci_yml.write_text(file_content)
+    file_content = file_content.replace("/CI/main?label=", "/ci.yml?branch=main&label=")
+    readme.write_text(file_content)
 
 
 def main(argv=None):
@@ -45,8 +46,8 @@ def main(argv=None):
     repos, config, commit, autofix_settings = autofix_lib.from_cli(
         args,
         find_repos=find_repos,
-        msg=f"ci: officially support Python 3.12",
-        branch_name=f"feat/python3.12",
+        msg=f"docs: update badge for CI workflow",
+        branch_name=f"docs/fix-ci-badge",
     )
     autofix_lib.fix(
         repos,
