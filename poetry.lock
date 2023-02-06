@@ -2,14 +2,14 @@
 
 [[package]]
 name = "all-repos"
-version = "1.24.0"
+version = "1.25.0"
 description = "Clone all your repositories and apply sweeping changes."
 category = "main"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "all_repos-1.24.0-py2.py3-none-any.whl", hash = "sha256:92b02e8cdc492f64260741cdeaf4b98cb7c8d9a41d41aed0537375c45fad60f0"},
-    {file = "all_repos-1.24.0.tar.gz", hash = "sha256:a4e3dfdd8adebdbffbb659b06a516f6fa0967247cee87356911860e1302292df"},
+    {file = "all_repos-1.25.0-py2.py3-none-any.whl", hash = "sha256:04ab18326ddd0c82683a44ef01ce935b4f2ec5985994953d2f052ed3a5d389f9"},
+    {file = "all_repos-1.25.0.tar.gz", hash = "sha256:06fdef4b4d0984c79b1887e012e8c90e03ddea0273ac692d4127ba44c6b34d99"},
 ]
 
 [package.dependencies]
@@ -69,14 +69,14 @@ tests = ["dj-database-url", "dj-email-url", "django-cache-url", "pytest"]
 
 [[package]]
 name = "identify"
-version = "2.5.12"
+version = "2.5.17"
 description = "File identification library for Python"
 category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "identify-2.5.12-py2.py3-none-any.whl", hash = "sha256:e8a400c3062d980243d27ce10455a52832205649bbcaf27ffddb3dfaaf477bad"},
-    {file = "identify-2.5.12.tar.gz", hash = "sha256:0bc96b09c838310b6fcfcc61f78a981ea07f94836ef6ef553da5bb5d4745d662"},
+    {file = "identify-2.5.17-py2.py3-none-any.whl", hash = "sha256:7d526dd1283555aafcc91539acc061d8f6f59adb0a7bba462735b0a318bff7ed"},
+    {file = "identify-2.5.17.tar.gz", hash = "sha256:93cc61a861052de9d4c541a7acb7e3dcc9c11b398a2144f6e52ae5285f5f4f06"},
 ]
 
 [package.extras]
@@ -105,26 +105,26 @@ tests = ["pytest", "pytz", "simplejson"]
 
 [[package]]
 name = "packaging"
-version = "22.0"
+version = "23.0"
 description = "Core utilities for Python packages"
 category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "packaging-22.0-py3-none-any.whl", hash = "sha256:957e2148ba0e1a3b282772e791ef1d8083648bc131c8ab0c1feba110ce1146c3"},
-    {file = "packaging-22.0.tar.gz", hash = "sha256:2198ec20bd4c017b8f9717e00f0c8714076fc2fd93816750ab48e2c41de2cfd3"},
+    {file = "packaging-23.0-py3-none-any.whl", hash = "sha256:714ac14496c3e68c99c29b00845f7a2b85f3bb6f1078fd9f72fd20f0570002b2"},
+    {file = "packaging-23.0.tar.gz", hash = "sha256:b6ad297f8907de0fa2fe1ccbd26fdaf387f5f47c7275fedf8cce89f99446cf97"},
 ]
 
 [[package]]
 name = "python-dotenv"
-version = "0.21.0"
+version = "0.21.1"
 description = "Read key-value pairs from a .env file and set them as environment variables"
 category = "main"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "python-dotenv-0.21.0.tar.gz", hash = "sha256:b77d08274639e3d34145dfa6c7008e66df0f04b7be7a75fd0d5292c191d79045"},
-    {file = "python_dotenv-0.21.0-py3-none-any.whl", hash = "sha256:1684eb44636dd462b66c3ee016599815514527ad99965de77f43e0944634a7e5"},
+    {file = "python-dotenv-0.21.1.tar.gz", hash = "sha256:1c93de8f636cde3ce377292818d0e440b6e45a82f215c3744979151fa8151c49"},
+    {file = "python_dotenv-0.21.1-py3-none-any.whl", hash = "sha256:41e12e0318bebc859fcc4d97d4db8d20ad21721a6aa5047dd59f090391cb549a"},
 ]
 
 [package.extras]
