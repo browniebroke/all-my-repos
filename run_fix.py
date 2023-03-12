@@ -11,13 +11,39 @@ from all_repos import autofix_lib
 from all_repos.grep import repos_matching
 
 
+UPDATED_RELEASE_PART = """  release:
+    runs-on: ubuntu-latest
+    environment: release
+    needs:
+      - test
+      - commitlint
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Release
+        uses: relekang/python-semantic-release@v7.33.2
+        if: github.ref_name == 'main'
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          pypi_token: ${{ secrets.PYPI_TOKEN }}
+      - name: Test release
+        uses: relekang/python-semantic-release@v7.33.2
+        if: github.ref_name != 'main'
+        with:
+          additional_options: --noop
+"""
+
+
 def find_repos(config) -> set[str]:
     repos = repos_matching(
         config,
         (
-            f"/actions?query=workflow%3ACI",
+            "relekang/python-semantic-release",
             "--",
-            "README.md",
+            ".github/workflows/ci.yml",
         ),
     )
     print(repos)
@@ -25,16 +51,20 @@ def find_repos(config) -> set[str]:
 
 
 def apply_fix():
-    readme = Path("README.md")
-    file_content = readme.read_text()
-    if "/actions?query=workflow%3ACI" not in file_content:
+    ci_yml = Path(".github/workflows/ci.yml")
+    file_content = ci_yml.read_text()
+    if "Test release" in file_content:
         return
 
-    file_content = file_content.replace(
-        "/actions?query=workflow%3ACI",
-        "/actions/workflows/ci.yml?query=branch%3Amain",
-    )
-    readme.write_text(file_content)
+    updated_lines = []
+    for line in file_content.split("\n"):
+        if line == "  release:":
+            break
+        updated_lines.append(line)
+
+    updated_lines.extend(UPDATED_RELEASE_PART.split("\n"))
+
+    ci_yml.write_text("\n".join(updated_lines))
 
 
 def main(argv=None):
@@ -45,8 +75,8 @@ def main(argv=None):
     repos, config, commit, autofix_settings = autofix_lib.from_cli(
         args,
         find_repos=find_repos,
-        msg=f"docs: update link for CI badge",
-        branch_name=f"docs/fix-ci-badge-link",
+        msg=f"ci: run PSR with no-op on feature branch",
+        branch_name=f"ci/noop-psr",
     )
     autofix_lib.fix(
         repos,
