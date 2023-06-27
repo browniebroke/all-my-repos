@@ -1,49 +1,19 @@
 from __future__ import annotations
 
 import argparse
-import json
-import re
 from pathlib import Path
-from random import randint
 
-import tomli
 from all_repos import autofix_lib
 from all_repos.grep import repos_matching
-
-
-UPDATED_RELEASE_PART = """  release:
-    runs-on: ubuntu-latest
-    environment: release
-    needs:
-      - test
-      - commitlint
-
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
-      - name: Release
-        uses: relekang/python-semantic-release@v7.33.2
-        if: github.ref_name == 'main'
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          pypi_token: ${{ secrets.PYPI_TOKEN }}
-      - name: Test release
-        uses: relekang/python-semantic-release@v7.33.2
-        if: github.ref_name != 'main'
-        with:
-          additional_options: --noop
-"""
 
 
 def find_repos(config) -> set[str]:
     repos = repos_matching(
         config,
         (
-            "relekang/python-semantic-release",
+            "poetry",
             "--",
-            ".github/workflows/ci.yml",
+            "pyproject.toml",
         ),
     )
     print(repos)
@@ -51,20 +21,48 @@ def find_repos(config) -> set[str]:
 
 
 def apply_fix():
-    ci_yml = Path(".github/workflows/ci.yml")
-    file_content = ci_yml.read_text()
-    if "Test release" in file_content:
+    file_path = Path("pyproject.toml")
+    content = file_path.read_text()
+
+    if 'python = "^3.8"' in content:
         return
 
-    updated_lines = []
-    for line in file_content.split("\n"):
-        if line == "  release:":
-            break
-        updated_lines.append(line)
+    content = content.replace('python = "^3.7"', 'python = "^3.8"')
+    file_path.write_text(content)
 
-    updated_lines.extend(UPDATED_RELEASE_PART.split("\n"))
+    ci_yml = Path(".github/workflows/ci.yml")
+    if ci_yml.exists():
+        content = ci_yml.read_text()
+        content = content.replace('python-version:\n          - "3.7"\n', 'python-version:\n')
+        ci_yml.write_text(content)
 
-    ci_yml.write_text("\n".join(updated_lines))
+    pc_yml = Path(".pre-commit-config.yaml")
+    if pc_yml.exists():
+        content = pc_yml.read_text()
+        content = content.replace('--py37-plus', '--py38-plus')
+        pc_yml.write_text(content)
+
+    template_path = Path("project")
+    if template_path.exists():
+        file_path = template_path / "pyproject.toml.jinja"
+        content = file_path.read_text()
+        content = content.replace('python = "^3.7"', 'python = "^3.8"')
+        file_path.write_text(content)
+
+        ci_yml = template_path / ".github" / "workflows" / "ci.yml"
+        content = ci_yml.read_text()
+        content = content.replace('python-version:\n          - "3.7"\n', 'python-version:\n')
+        ci_yml.write_text(content)
+
+        pc_yml = template_path / ".pre-commit-config.yaml"
+        content = pc_yml.read_text()
+        content = content.replace('--py37-plus', '--py38-plus')
+        pc_yml.write_text(content)
+
+        readme = template_path / "README.md"
+        content = readme.read_text()
+        content = content.replace('Python 3.7+.', 'Python 3.8+.')
+        readme.write_text(content)
 
 
 def main(argv=None):
@@ -75,8 +73,12 @@ def main(argv=None):
     repos, config, commit, autofix_settings = autofix_lib.from_cli(
         args,
         find_repos=find_repos,
-        msg=f"ci: run PSR with no-op on feature branch",
-        branch_name=f"ci/noop-psr",
+        msg=(
+            "feat: drop support for Python 3.7\n\n"
+            "BREAKING CHANGE: Drop support for Python 3.7 as it reached EOL on June 27, 2023. "
+            "More infos: https://devguide.python.org/versions/"
+        ),
+        branch_name=f"feat/drop-python-3.7",
     )
     autofix_lib.fix(
         repos,
