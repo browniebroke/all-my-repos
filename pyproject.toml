@@ -6,7 +6,7 @@ authors = ["Bruno Alla <alla.brunoo@gmail.com>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.11"
 all-repos = "^1.21"
 all-repos-envvar = "^0.2"
 tomli = "^2.0"
