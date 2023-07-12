@@ -7,24 +7,38 @@ from all_repos import autofix_lib
 from all_repos.grep import repos_matching
 
 # Find repos that have this file...
-FILE_NAME = ".nvmrc"
+FILE_NAME = "pyproject.toml"
 # ... and which content contains this string.
-FILE_CONTAINS = "18"
+FILE_CONTAINS = "sphinx-rtd-theme"
 # Git stuff
-GIT_COMMIT_MSG = "chore: update gitpod config"
-GIT_BRANCH_NAME = "chore/update-gitpod-config"
-
-
-CONTENT = """tasks:
-  - command: nvm i && npm install
-"""
+GIT_COMMIT_MSG = "docs: switch to furo theme"
+GIT_BRANCH_NAME = "docs/furo-theme"
 
 
 def apply_fix():
     """Apply fix to a matching repo."""
-    gitpod_yml = Path(".gitpod.yml")
-    gitpod_yml.write_text(CONTENT)
     breakpoint()
+    pyproject_toml = Path("pyproject.toml")
+    content = pyproject_toml.read_text()
+    content = content.replace(
+        'sphinx-rtd-theme = ">=1.0"',
+        'furo = ">=2023.5.20"',
+    )
+    pyproject_toml.write_text(content)
+
+    docs_conf_py = Path("docs/conf.py")
+    content = docs_conf_py.read_text()
+    content = content.replace(
+        'html_theme = "sphinx_rtd_theme"',
+        'html_theme = "furo"',
+    )
+    docs_conf_py.write_text(content)
+
+    autofix_lib.run(
+        "poetry",
+        "lock",
+        "--no-update",
+    )
 
 
 # You shouldn't need to change anything below this line
