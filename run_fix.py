@@ -7,38 +7,23 @@ from all_repos import autofix_lib
 from all_repos.grep import repos_matching
 
 # Find repos that have this file...
-FILE_NAME = "pyproject.toml"
+FILE_NAME = ".github/workflows/ci.yml"
 # ... and which content contains this string.
-FILE_CONTAINS = "sphinx-rtd-theme"
+FILE_CONTAINS = '# - "3.12-dev"'
 # Git stuff
-GIT_COMMIT_MSG = "docs: switch to furo theme"
-GIT_BRANCH_NAME = "docs/furo-theme"
+GIT_COMMIT_MSG = "ci: add Python 3.12 to the CI matrix"
+GIT_BRANCH_NAME = "ci/python-3.12"
 
 
 def apply_fix():
     """Apply fix to a matching repo."""
-    breakpoint()
-    pyproject_toml = Path("pyproject.toml")
-    content = pyproject_toml.read_text()
+    ci_yml = Path(".github/workflows/ci.yml")
+    content = ci_yml.read_text()
     content = content.replace(
-        'sphinx-rtd-theme = ">=1.0"',
-        'furo = ">=2023.5.20"',
+        '# - "3.12-dev"',
+        '- "3.12-dev"',
     )
-    pyproject_toml.write_text(content)
-
-    docs_conf_py = Path("docs/conf.py")
-    content = docs_conf_py.read_text()
-    content = content.replace(
-        'html_theme = "sphinx_rtd_theme"',
-        'html_theme = "furo"',
-    )
-    docs_conf_py.write_text(content)
-
-    autofix_lib.run(
-        "poetry",
-        "lock",
-        "--no-update",
-    )
+    ci_yml.write_text(content)
 
 
 # You shouldn't need to change anything below this line
