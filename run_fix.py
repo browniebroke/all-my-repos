@@ -1,38 +1,31 @@
 from __future__ import annotations
 
 import argparse
+import re
 from pathlib import Path
 
 from all_repos import autofix_lib
 from all_repos.grep import repos_matching
 
 # Find repos that have this file...
-FILE_NAME = "pyproject.toml"
+FILE_NAME = ".github/workflows/labels.yml"
 # ... and which content contains this string.
-FILE_CONTAINS = 'classifiers = '
+FILE_CONTAINS = 'python-version: 3'
 # Git stuff
-GIT_COMMIT_MSG = "feat: add official support for Python 3.12"
-GIT_BRANCH_NAME = "feat/python-3.12"
+GIT_COMMIT_MSG = "ci: use latest Python 3 for labels workflow"
+GIT_BRANCH_NAME = "ci/labels-latest-python"
 
 
 def apply_fix():
     """Apply fix to a matching repo."""
-    ci_yml = Path(".github/workflows/ci.yml")
+    ci_yml = Path(".github/workflows/labels.yml")
     content = ci_yml.read_text()
-    content = content.replace(
-        '# - "3.12-dev"',
-        '- "3.12-dev"',
+    content = re.sub(
+        r'python-version: 3.\d+',
+        'python-version: 3.x',
+        content,
     )
     ci_yml.write_text(content)
-
-    pyproject_toml = Path(FILE_NAME)
-    content = pyproject_toml.read_text()
-    if "Programming Language :: Python :: 3.12" not in content:
-        content = content.replace(
-            '    "Topic :: Software Development :: Libraries",',
-            '    "Topic :: Software Development :: Libraries",\n    "Programming Language :: Python :: 3.12",',
-        )
-        pyproject_toml.write_text(content)
 
 
 # You shouldn't need to change anything below this line
