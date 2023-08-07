@@ -9,99 +9,30 @@ from all_repos.grep import repos_matching
 # Find repos that have this file...
 FILE_NAME = "pyproject.toml"
 # ... and which content contains this string.
-FILE_CONTAINS = "[tool.semantic_release]"
+FILE_CONTAINS = 'classifiers = '
 # Git stuff
-GIT_COMMIT_MSG = "chore: customise PSR v8 changelog generation"
-GIT_BRANCH_NAME = "chore/psr-v8-changelog"
-
-PYPROJECT_TOML_DIFF = """[tool.semantic_release.changelog]
-exclude_commit_patterns = [
-    "chore*",
-    "ci*",
-]
-
-[tool.semantic_release.changelog.environment]
-keep_trailing_newline = true
-
-"""
-
-CHANGELOG_TEMPLATE = """# CHANGELOG
-
-{%- for version, release in context.history.released.items() %}
-{%- if version.as_tag() > "v1.0.0" %}
-
-## {{ version.as_tag() }} ({{ release.tagged_date.strftime("%Y-%m-%d") }})
-
-{%- for category, commits in release["elements"].items() %}
-{# Category title: Breaking, Fix, Documentation #}
-### {{ category | capitalize }}
-{# List actual changes in the category #}
-{%- for commit in commits %}
-- {{ commit.descriptions[0] | capitalize }} ([`{{ commit.short_hash }}`]({{ commit.hexsha | commit_hash_url }}))
-{%- endfor %}{# for commit #}
-
-{%- endfor %}{# for category, commits #}
-
-{%- endif %}{# if version.as_tag() #}
-
-{%- endfor %}{# for version, release #}
-
-{% include ".changelog-old.md" %}{# include old changelog at the end -#}
-"""
+GIT_COMMIT_MSG = "feat: add official support for Python 3.12"
+GIT_BRANCH_NAME = "feat/python-3.12"
 
 
 def apply_fix():
     """Apply fix to a matching repo."""
-    pyproject_toml = Path("pyproject.toml")
+    ci_yml = Path(".github/workflows/ci.yml")
+    content = ci_yml.read_text()
+    content = content.replace(
+        '# - "3.12-dev"',
+        '- "3.12-dev"',
+    )
+    ci_yml.write_text(content)
+
+    pyproject_toml = Path(FILE_NAME)
     content = pyproject_toml.read_text()
-    if "[tool.semantic_release.changelog]" in content:
-        # Already updated
-        return
-
-    changelog_file = Path("CHANGELOG.md")
-    if not changelog_file.exists():
-        # No changelog file
-        return
-
-    # read until end of [tool.semantic_release] section
-    updated_lines = []
-    inside_section = False
-    section_passed = False
-    inserted = False
-    for line in content.splitlines():
-        updated_lines.append(line)
-        if line == "[tool.semantic_release]":
-            inside_section = True
-        if inside_section and line == "":
-            inside_section = False
-            section_passed = True
-        if section_passed and not inserted:
-            updated_lines.extend(PYPROJECT_TOML_DIFF.splitlines())
-            inserted = True
-
-    # write back content
-    new_content = "\n".join(updated_lines)
-    pyproject_toml.write_text(new_content)
-
-    # Create template dir
-    templates_dir = Path("templates")
-    templates_dir.mkdir()
-
-    # Create changelog template & save old changelog
-    (templates_dir / "CHANGELOG.md.j2").write_text(CHANGELOG_TEMPLATE)
-    old_changelog_content = changelog_file.read_text()
-    old_changelog_content = old_changelog_content.replace(
-        "# Changelog",
-        "",
-    )
-    old_changelog_content = old_changelog_content.replace(
-        "<!--next-version-placeholder-->",
-        "",
-    )
-    old_changelog_content = old_changelog_content.lstrip("\n")
-    (templates_dir / ".changelog-old.md").write_text(old_changelog_content)
-    autofix_lib.run("git", "add", ".")
-    breakpoint()
+    if "Programming Language :: Python :: 3.12" not in content:
+        content = content.replace(
+            '    "Topic :: Software Development :: Libraries",',
+            '    "Topic :: Software Development :: Libraries",\n    "Programming Language :: Python :: 3.12",',
+        )
+        pyproject_toml.write_text(content)
 
 
 # You shouldn't need to change anything below this line
