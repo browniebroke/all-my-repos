@@ -9,24 +9,73 @@ from all_repos.grep import repos_matching
 # Find repos that have this file...
 FILE_NAME = ".github/workflows/ci.yml"
 # ... and which content contains this string.
-FILE_CONTAINS = "relekang/python-semantic-release"
+FILE_CONTAINS = "PYPI_TOKEN"
 # Git stuff
-GIT_COMMIT_MSG = "chore: switch PSR action to new repo"
-GIT_BRANCH_NAME = "chore/psr-action"
+GIT_COMMIT_MSG = "ci: release to PyPI using Trusted Publisher"
+GIT_BRANCH_NAME = "ci/trusted-publisher"
+
+CONTENT = """\
+  release:
+    needs:
+      - test
+      - commitlint
+
+    runs-on: ubuntu-latest
+    environment: release
+    concurrency: release
+    permissions:
+      id-token: write
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.head_ref || github.ref_name }}
+
+      # Do a dry run of PSR
+      - name: Test release
+        uses: python-semantic-release/python-semantic-release@v8.1.1
+        if: github.ref_name != 'main'
+        with:
+          root_options: --noop
+
+      # On main branch: actual PSR + upload to PyPI & GitHub
+      - name: Release
+        uses: python-semantic-release/python-semantic-release@v8.1.1
+        id: release
+        if: github.ref_name == 'main'
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        if: steps.release.outputs.released == 'true'
+
+      - name: Publish package distributions to GitHub Releases
+        uses: python-semantic-release/upload-to-gh-release@main
+        if: steps.release.outputs.released == 'true'
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+"""
 
 
 def apply_fix():
     """Apply fix to a matching repo."""
     ci_yml = Path(FILE_NAME)
     content = ci_yml.read_text()
-    if "relekang/python-semantic-release" not in content:
+    if "secrets.PYPI_TOKEN" not in content:
         return
 
-    content = content.replace(
-        "relekang/python-semantic-release",
-        "python-semantic-release/python-semantic-release",
-    )
-    ci_yml.write_text(content)
+    new_lines = []
+    for line in content.splitlines():
+        if "  release:" in line:
+            break
+        new_lines.append(line)
+
+    new_lines.extend(CONTENT.splitlines())
+
+    ci_yml.write_text("\n".join(new_lines))
 
 
 # You shouldn't need to change anything below this line
