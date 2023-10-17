@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import re
 from pathlib import Path
 
@@ -8,29 +9,32 @@ from all_repos import autofix_lib
 from all_repos.grep import repos_matching
 
 # Find repos that have this file...
-FILE_NAME = "pyproject.toml"
+FILE_NAME = ".github/workflows/ci.yml"
 # ... and which content contains this string.
-FILE_CONTAINS = "version_variable = \""
+FILE_CONTAINS = "actions/checkout@8ad"
 # Git stuff
-GIT_COMMIT_MSG = "chore: update PSR version_variables config"
-GIT_BRANCH_NAME = "chore/psr-version-variables"
-
+GIT_COMMIT_MSG = "chore: change checkout action to v4 tag"
+GIT_BRANCH_NAME = "chore/checkout-action-v4"
 
 
 def apply_fix():
     """Apply fix to a matching repo."""
-    pyproject_toml = Path(FILE_NAME)
-    content = pyproject_toml.read_text()
-    if "version_variables = [" in content:
-        return
+    workflows_dir = Path(".github/workflows")
+    list_dir = os.listdir(workflows_dir)
+    for file_name in list_dir:
+        workflow_file_path = workflows_dir / file_name
+        if workflow_file_path.suffix == ".yml":
+            file_content = workflow_file_path.read_text()
+            if "actions/checkout@8ad" not in file_content:
+                continue
 
-    content = re.sub(
-        r'version_variable = "([^"]+)"',
-        r'version_variables = [\n    "\1",\n]',
-        content,
-    )
+            file_content = re.sub(
+                r'actions/checkout@.*',
+                r'actions/checkout@v4',
+                file_content,
+            )
 
-    pyproject_toml.write_text(content)
+            workflow_file_path.write_text(file_content)
 
 
 # You shouldn't need to change anything below this line
