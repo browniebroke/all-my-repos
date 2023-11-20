@@ -1,40 +1,57 @@
 from __future__ import annotations
 
 import argparse
-import os
-import re
 from pathlib import Path
 
 from all_repos import autofix_lib
 from all_repos.grep import repos_matching
 
 # Find repos that have this file...
-FILE_NAME = ".github/workflows/ci.yml"
+FILE_NAME = "pyproject.toml"
 # ... and which content contains this string.
-FILE_CONTAINS = "actions/checkout@8ad"
+FILE_CONTAINS = "tool.semantic_release"
 # Git stuff
-GIT_COMMIT_MSG = "chore: change checkout action to v4 tag"
-GIT_BRANCH_NAME = "chore/checkout-action-v4"
+GIT_COMMIT_MSG = "chore: add PSR branch groups to test releases on feature branches"
+GIT_BRANCH_NAME = "chore/psr-branch-groups"
+
+LINES_TO_INSERT = """[tool.semantic_release.branches.main]
+match = "main"
+
+[tool.semantic_release.branches.noop]
+match = "(?!main$)"
+prerelease = true
+
+"""
 
 
 def apply_fix():
     """Apply fix to a matching repo."""
-    workflows_dir = Path(".github/workflows")
-    list_dir = os.listdir(workflows_dir)
-    for file_name in list_dir:
-        workflow_file_path = workflows_dir / file_name
-        if workflow_file_path.suffix == ".yml":
-            file_content = workflow_file_path.read_text()
-            if "actions/checkout@8ad" not in file_content:
-                continue
+    pyproject_toml = Path("pyproject.toml")
+    file_content = pyproject_toml.read_text()
+    if "tool.semantic_release.branches.main" in file_content:
+        return
 
-            file_content = re.sub(
-                r'actions/checkout@.*',
-                r'actions/checkout@v4',
-                file_content,
-            )
+    breakpoint()
+    updated_lines = []
+    inside_psr = False
+    branch_line_removed = False
+    for line in file_content.splitlines():
+        if line == "[tool.semantic_release]":
+            inside_psr = True
 
-            workflow_file_path.write_text(file_content)
+        if inside_psr and not branch_line_removed and line == 'branch = "main"':
+            branch_line_removed = True
+            continue
+
+        if line == "[tool.pytest.ini_options]":
+            updated_lines.extend(LINES_TO_INSERT.splitlines())
+            inside_psr = False
+
+        updated_lines.append(line)
+
+    # Add newline at end of file
+    updated_lines.append("")
+    pyproject_toml.write_text("\n".join(updated_lines))
 
 
 # You shouldn't need to change anything below this line
