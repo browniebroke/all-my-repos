@@ -7,52 +7,34 @@ from all_repos import autofix_lib
 from all_repos.grep import repos_matching
 
 # Find repos that have this file...
-FILE_NAME = "pyproject.toml"
+FILE_NAME = "README.md"
 # ... and which content contains this string.
-FILE_CONTAINS = "tool.ruff"
+FILE_CONTAINS = "https://img.shields.io/badge/packaging-poetry-299bd7?style=flat-square&logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAASCAYAAABrXO8xAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAJJSURBVHgBfZLPa1NBEMe/s7tNXoxW1KJQKaUHkXhQvHgW6UHQQ09CBS/6V3hKc/AP8CqCrUcpmop3Cx48eDB4yEECjVQrlZb80CRN8t6OM/teagVxYZi38+Yz853dJbzoMV3MM8cJUcLMSUKIE8AzQ2PieZzFxEJOHMOgMQQ+dUgSAckNXhapU/NMhDSWLs1B24A8sO1xrN4NECkcAC9ASkiIJc6k5TRiUDPhnyMMdhKc+Zx19l6SgyeW76BEONY9exVQMzKExGKwwPsCzza7KGSSWRWEQhyEaDXp6ZHEr416ygbiKYOd7TEWvvcQIeusHYMJGhTwF9y7sGnSwaWyFAiyoxzqW0PM/RjghPxF2pWReAowTEXnDh0xgcLs8l2YQmOrj3N7ByiqEoH0cARs4u78WgAVkoEDIDoOi3AkcLOHU60RIg5wC4ZuTC7FaHKQm8Hq1fQuSOBvX/sodmNJSB5geaF5CPIkUeecdMxieoRO5jz9bheL6/tXjrwCyX/UYBUcjCaWHljx1xiX6z9xEjkYAzbGVnB8pvLmyXm9ep+W8CmsSHQQY77Zx1zboxAV0w7ybMhQmfqdmmw3nEp1I0Z+FGO6M8LZdoyZnuzzBdjISicKRnpxzI9fPb+0oYXsNdyi+d3h9bm9MWYHFtPeIZfLwzmFDKy1ai3p+PDls1Llz4yyFpferxjnyjJDSEy9CaCx5m2cJPerq6Xm34eTrZt3PqxYO1XOwDYZrFlH1fWnpU38Y9HRze3lj0vOujZcXKuuXm3jP+s3KbZVra7y2EAAAAAASUVORK5CYII="
 # Git stuff
-GIT_COMMIT_MSG = "chore: upgrade ruff settings"
-GIT_BRANCH_NAME = "chore/upgrade-ruff-settings"
+GIT_COMMIT_MSG = "chore: switch to official Poetry badge"
+GIT_BRANCH_NAME = "chore/poetry-badge"
 
 
 def apply_fix():
     """Apply fix to a matching repo."""
-    pyproject_toml = Path("pyproject.toml")
-    file_content = pyproject_toml.read_text()
-    if "[tool.ruff.lint]" in file_content:
-        return
-
-    updated_lines = []
-    inside_ruff = False
-    inside_lint_section = False
-    for line in file_content.splitlines():
-        if line == "[tool.ruff]":
-            inside_ruff = True
-
-        if inside_ruff and not inside_lint_section and line.startswith("ignore = ["):
-            inside_lint_section = True
-            updated_lines.append("")
-            updated_lines.append("[tool.ruff.lint]")
-            updated_lines.append(line)
+    file_paths = [
+        Path(FILE_NAME),
+        Path("project") / f"{FILE_NAME}.jinja",
+    ]
+    new_url = "https://img.shields.io/endpoint?url=https://python-poetry.org/badge/v0.json"
+    for readme_md in file_paths:
+        if not readme_md.exists():
             continue
 
-        if inside_lint_section and line == "[tool.ruff.per-file-ignores]":
-            if updated_lines[-1] != "":
-                updated_lines.append("")
-            updated_lines.append("[tool.ruff.lint.per-file-ignores]")
+        file_content = readme_md.read_text()
+        if new_url in file_content:
             continue
 
-        if inside_lint_section and line == "[tool.ruff.isort]":
-            if updated_lines[-1] != "":
-                updated_lines.append("")
-            updated_lines.append("[tool.ruff.lint.isort]")
-            continue
-
-        updated_lines.append(line)
-
-    # Add newline at end of file
-    updated_lines.append("")
-    pyproject_toml.write_text("\n".join(updated_lines))
+        file_content = file_content.replace(
+            FILE_CONTAINS,
+            new_url,
+        )
+        readme_md.write_text(file_content)
 
 
 # You shouldn't need to change anything below this line
