@@ -7,34 +7,75 @@ from all_repos import autofix_lib
 from all_repos.grep import repos_matching
 
 # Find repos that have this file...
-FILE_NAME = "README.md"
+FILE_NAME = ".pre-commit-config.yaml"
 # ... and which content contains this string.
-FILE_CONTAINS = "https://img.shields.io/badge/packaging-poetry-299bd7?style=flat-square&logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAASCAYAAABrXO8xAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAJJSURBVHgBfZLPa1NBEMe/s7tNXoxW1KJQKaUHkXhQvHgW6UHQQ09CBS/6V3hKc/AP8CqCrUcpmop3Cx48eDB4yEECjVQrlZb80CRN8t6OM/teagVxYZi38+Yz853dJbzoMV3MM8cJUcLMSUKIE8AzQ2PieZzFxEJOHMOgMQQ+dUgSAckNXhapU/NMhDSWLs1B24A8sO1xrN4NECkcAC9ASkiIJc6k5TRiUDPhnyMMdhKc+Zx19l6SgyeW76BEONY9exVQMzKExGKwwPsCzza7KGSSWRWEQhyEaDXp6ZHEr416ygbiKYOd7TEWvvcQIeusHYMJGhTwF9y7sGnSwaWyFAiyoxzqW0PM/RjghPxF2pWReAowTEXnDh0xgcLs8l2YQmOrj3N7ByiqEoH0cARs4u78WgAVkoEDIDoOi3AkcLOHU60RIg5wC4ZuTC7FaHKQm8Hq1fQuSOBvX/sodmNJSB5geaF5CPIkUeecdMxieoRO5jz9bheL6/tXjrwCyX/UYBUcjCaWHljx1xiX6z9xEjkYAzbGVnB8pvLmyXm9ep+W8CmsSHQQY77Zx1zboxAV0w7ybMhQmfqdmmw3nEp1I0Z+FGO6M8LZdoyZnuzzBdjISicKRnpxzI9fPb+0oYXsNdyi+d3h9bm9MWYHFtPeIZfLwzmFDKy1ai3p+PDls1Llz4yyFpferxjnyjJDSEy9CaCx5m2cJPerq6Xm34eTrZt3PqxYO1XOwDYZrFlH1fWnpU38Y9HRze3lj0vOujZcXKuuXm3jP+s3KbZVra7y2EAAAAAASUVORK5CYII="
+FILE_CONTAINS = "https://github.com/psf/black"
 # Git stuff
-GIT_COMMIT_MSG = "chore: switch to official Poetry badge"
-GIT_BRANCH_NAME = "chore/poetry-badge"
+GIT_COMMIT_MSG = "chore: switch to Ruff formatter"
+GIT_BRANCH_NAME = "chore/ruff-formatter"
 
 
 def apply_fix():
     """Apply fix to a matching repo."""
+    breakpoint()
     file_paths = [
         Path(FILE_NAME),
-        Path("project") / f"{FILE_NAME}.jinja",
+        Path("project") / FILE_NAME,
     ]
-    new_url = "https://img.shields.io/endpoint?url=https://python-poetry.org/badge/v0.json"
-    for readme_md in file_paths:
-        if not readme_md.exists():
+    for file_path in file_paths:
+        if not file_path.exists():
             continue
 
-        file_content = readme_md.read_text()
-        if new_url in file_content:
+        file_content = file_path.read_text()
+        if "- id: ruff-format" in file_content:
             continue
 
-        file_content = file_content.replace(
-            FILE_CONTAINS,
-            new_url,
+        updated_lines = []
+        inside_ruff = False
+        inside_black = False
+        for line in file_content.splitlines():
+            if inside_ruff and line.startswith("  - repo: "):
+                updated_lines.append("      - id: ruff-format")
+                inside_ruff = False
+
+            if "https://github.com/astral-sh/ruff-pre-commit" in line:
+                inside_ruff = True
+
+            if inside_black:
+                if line.startswith("  - repo: "):
+                    inside_black = False
+                else:
+                    continue
+
+            if "repo: https://github.com/psf/black" in line:
+                inside_black = True
+                continue
+
+            updated_lines.append(line)
+
+        # Add newline at end of file
+        updated_lines.append("")
+        file_path.write_text("\n".join(updated_lines))
+
+    readme_paths = [
+        Path("README.md"),
+        Path("project") / "README.md",
+    ]
+    for readme_path in readme_paths:
+        if not readme_path.exists():
+            continue
+
+        readme_content = readme_path.read_text()
+        readme_content = readme_content.replace(
+            "https://github.com/ambv/black",
+            "https://github.com/astral-sh/ruff",
         )
-        readme_md.write_text(file_content)
+        readme_content = readme_content.replace(
+            'src="https://img.shields.io/badge/code%20style-black-000000.svg?style=flat-square" alt="black"',
+            'src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json" alt="Ruff"',
+        )
+        readme_path.write_text(readme_content)
+
 
 
 # You shouldn't need to change anything below this line
