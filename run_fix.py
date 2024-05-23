@@ -7,75 +7,46 @@ from all_repos import autofix_lib
 from all_repos.grep import repos_matching
 
 # Find repos that have this file...
-FILE_NAME = ".pre-commit-config.yaml"
+FILE_NAME = ".github/workflows/ci.yml"
 # ... and which content contains this string.
-FILE_CONTAINS = "https://github.com/psf/black"
+FILE_CONTAINS = "snok/install-poetry"
 # Git stuff
-GIT_COMMIT_MSG = "chore: switch to Ruff formatter"
-GIT_BRANCH_NAME = "chore/ruff-formatter"
+GIT_COMMIT_MSG = "ci: enable Poetry cache"
+GIT_BRANCH_NAME = "ci/poetry-cache"
 
 
 def apply_fix():
     """Apply fix to a matching repo."""
-    breakpoint()
-    file_paths = [
-        Path(FILE_NAME),
-        Path("project") / FILE_NAME,
-    ]
-    for file_path in file_paths:
-        if not file_path.exists():
+    file_path = Path(FILE_NAME)
+    file_content = file_path.read_text()
+    if "snok/install-poetry" not in file_content:
+        return
+
+    updated_lines = []
+    inside_test = False
+    for line in file_content.splitlines():
+        if line == "  test:":
+            inside_test = True
+
+        if inside_test and "- name: Set up Python" in line:
+            updated_lines.append("      - name: Install poetry")
+            updated_lines.append("        run: pipx install poetry")
+
+        if inside_test and "- uses: snok/install-poetry" in line:
             continue
 
-        file_content = file_path.read_text()
-        if "- id: ruff-format" in file_content:
-            continue
+        if (
+            inside_test
+            and "python-version:" in line
+            and "with:" in updated_lines[-1]
+            and "uses: actions/setup-python" in updated_lines[-2]
+        ):
+            updated_lines.append("          cache: poetry")
 
-        updated_lines = []
-        inside_ruff = False
-        inside_black = False
-        for line in file_content.splitlines():
-            if inside_ruff and line.startswith("  - repo: "):
-                updated_lines.append("      - id: ruff-format")
-                inside_ruff = False
+        updated_lines.append(line)
 
-            if "https://github.com/astral-sh/ruff-pre-commit" in line:
-                inside_ruff = True
-
-            if inside_black:
-                if line.startswith("  - repo: "):
-                    inside_black = False
-                else:
-                    continue
-
-            if "repo: https://github.com/psf/black" in line:
-                inside_black = True
-                continue
-
-            updated_lines.append(line)
-
-        # Add newline at end of file
-        updated_lines.append("")
-        file_path.write_text("\n".join(updated_lines))
-
-    readme_paths = [
-        Path("README.md"),
-        Path("project") / "README.md",
-    ]
-    for readme_path in readme_paths:
-        if not readme_path.exists():
-            continue
-
-        readme_content = readme_path.read_text()
-        readme_content = readme_content.replace(
-            "https://github.com/ambv/black",
-            "https://github.com/astral-sh/ruff",
-        )
-        readme_content = readme_content.replace(
-            'src="https://img.shields.io/badge/code%20style-black-000000.svg?style=flat-square" alt="black"',
-            'src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json" alt="Ruff"',
-        )
-        readme_path.write_text(readme_content)
-
+    updated_lines.append("")
+    file_path.write_text("\n".join(updated_lines))
 
 
 # You shouldn't need to change anything below this line
