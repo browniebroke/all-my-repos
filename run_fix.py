@@ -7,28 +7,41 @@ from all_repos import autofix_lib
 from all_repos.grep import repos_matching
 
 # Find repos that have this file...
-FILE_NAME = "pyproject.toml"
+FILE_NAME = ".github/ISSUE_TEMPLATE/2-feature-request.md"
 # ... and which content contains this string.
-FILE_CONTAINS = "[tool.semantic_release]"
+FILE_CONTAINS = "Feature request"
 # Git stuff
-GIT_COMMIT_MSG = "chore: add code of conduct"
-GIT_BRANCH_NAME = "chore/coc"
+GIT_COMMIT_MSG = "chore: improve issue templates"
+GIT_BRANCH_NAME = "chore/issue-templates"
 
 
 def apply_fix():
     """Apply fix to a matching repo."""
-    coc_content = (Path(__file__).parent / "CODE_OF_CONDUCT.md").read_text()
-    dot_github = Path(".github")
-    if not dot_github.exists():
+
+    templates_path = Path(".github") / "ISSUE_TEMPLATE"
+    if not templates_path.exists():
         return
 
-    file_path = dot_github / "CODE_OF_CONDUCT.md"
-    file_path.write_text(coc_content)
+    (templates_path / "1-bug_report.md").unlink(missing_ok=True)
+    (templates_path / "2-feature-request.md").unlink(missing_ok=True)
 
-    autofix_lib.run("git", "add", str(file_path))
+    current_path = Path(__file__).parent
 
-    root_coc = Path("CODE_OF_CONDUCT.md")
-    root_coc.unlink(missing_ok=True)
+    result = autofix_lib.run("git", "remote", "get-url", "origin", capture_output=True)
+    origin_url = result.stdout.decode().strip()
+    repo_name = origin_url.split("/")[-1]
+
+    file_names = [
+        "1-bug-report.yml",
+        "2-feature-request.yml",
+        "config.yml",
+    ]
+    for file_name in file_names:
+        content = (current_path / file_name).read_text()
+        file_path = templates_path / file_name
+        rendered_content = content.replace("{{ repo_name }}", repo_name)
+        file_path.write_text(rendered_content)
+        autofix_lib.run("git", "add", str(file_path))
 
 
 # You shouldn't need to change anything below this line
