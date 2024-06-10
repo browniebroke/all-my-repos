@@ -7,46 +7,28 @@ from all_repos import autofix_lib
 from all_repos.grep import repos_matching
 
 # Find repos that have this file...
-FILE_NAME = ".github/workflows/ci.yml"
+FILE_NAME = "pyproject.toml"
 # ... and which content contains this string.
-FILE_CONTAINS = "snok/install-poetry"
+FILE_CONTAINS = "[tool.semantic_release]"
 # Git stuff
-GIT_COMMIT_MSG = "ci: enable Poetry cache"
-GIT_BRANCH_NAME = "ci/poetry-cache"
+GIT_COMMIT_MSG = "chore: add code of conduct"
+GIT_BRANCH_NAME = "chore/coc"
 
 
 def apply_fix():
     """Apply fix to a matching repo."""
-    file_path = Path(FILE_NAME)
-    file_content = file_path.read_text()
-    if "snok/install-poetry" not in file_content:
+    coc_content = (Path(__file__).parent / "CODE_OF_CONDUCT.md").read_text()
+    dot_github = Path(".github")
+    if not dot_github.exists():
         return
 
-    updated_lines = []
-    inside_test = False
-    for line in file_content.splitlines():
-        if line == "  test:":
-            inside_test = True
+    file_path = dot_github / "CODE_OF_CONDUCT.md"
+    file_path.write_text(coc_content)
 
-        if inside_test and "- name: Set up Python" in line:
-            updated_lines.append("      - name: Install poetry")
-            updated_lines.append("        run: pipx install poetry")
+    autofix_lib.run("git", "add", str(file_path))
 
-        if inside_test and "- uses: snok/install-poetry" in line:
-            continue
-
-        if (
-            inside_test
-            and "python-version:" in line
-            and "with:" in updated_lines[-1]
-            and "uses: actions/setup-python" in updated_lines[-2]
-        ):
-            updated_lines.append("          cache: poetry")
-
-        updated_lines.append(line)
-
-    updated_lines.append("")
-    file_path.write_text("\n".join(updated_lines))
+    root_coc = Path("CODE_OF_CONDUCT.md")
+    root_coc.unlink(missing_ok=True)
 
 
 # You shouldn't need to change anything below this line
