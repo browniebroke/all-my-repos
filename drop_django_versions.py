@@ -7,9 +7,7 @@ from all_repos import autofix_lib
 from all_repos.grep import repos_matching
 
 # Find repos that have this file...
-FILE_NAME = "pyproject.toml"
-# For pypackage-template
-# FILE_NAME = "project/pyproject.toml.jinja"
+FILE_NAMES = ["pyproject.toml", "project/pyproject.toml.jinja"]
 # ... and which content contains this string.
 FILE_CONTAINS = "Framework :: Django :: 3.2"
 # Git stuff
@@ -74,7 +72,7 @@ def find_repos(config) -> set[str]:
     """Find matching repos using git grep."""
     repos = repos_matching(
         config,
-        (FILE_CONTAINS, "--", FILE_NAME),
+        (FILE_CONTAINS, "--", *FILE_NAMES),
     )
     return repos
 
