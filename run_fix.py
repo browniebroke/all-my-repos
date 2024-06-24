@@ -7,41 +7,26 @@ from all_repos import autofix_lib
 from all_repos.grep import repos_matching
 
 # Find repos that have this file...
-FILE_NAME = ".github/ISSUE_TEMPLATE/2-feature-request.md"
+FILE_NAME = ".github/labels.toml"
 # ... and which content contains this string.
-FILE_CONTAINS = "Feature request"
+FILE_CONTAINS = 'breaking'
 # Git stuff
-GIT_COMMIT_MSG = "chore: improve issue templates"
-GIT_BRANCH_NAME = "chore/issue-templates"
+GIT_COMMIT_MSG = "chore: add fund to list of labels"
+GIT_BRANCH_NAME = "chore/add-fund-label"
 
 
 def apply_fix():
     """Apply fix to a matching repo."""
+    new_content = (Path(__file__).parent / "labels.toml").read_text()
 
-    templates_path = Path(".github") / "ISSUE_TEMPLATE"
-    if not templates_path.exists():
-        return
+    labels_toml = Path(FILE_NAME)
+    if labels_toml.exists():
+        labels_toml.write_text(new_content)
 
-    (templates_path / "1-bug_report.md").unlink(missing_ok=True)
-    (templates_path / "2-feature-request.md").unlink(missing_ok=True)
-
-    current_path = Path(__file__).parent
-
-    result = autofix_lib.run("git", "remote", "get-url", "origin", capture_output=True)
-    origin_url = result.stdout.decode().strip()
-    repo_name = origin_url.split("/")[-1]
-
-    file_names = [
-        "1-bug-report.yml",
-        "2-feature-request.yml",
-        "config.yml",
-    ]
-    for file_name in file_names:
-        content = (current_path / file_name).read_text()
-        file_path = templates_path / file_name
-        rendered_content = content.replace("{{ repo_name }}", repo_name)
-        file_path.write_text(rendered_content)
-        autofix_lib.run("git", "add", str(file_path))
+    # Update pyproject template
+    labels_toml = Path(f"project/{FILE_NAME}")
+    if labels_toml.exists():
+        labels_toml.write_text(new_content)
 
 
 # You shouldn't need to change anything below this line
