@@ -7,9 +7,11 @@ from all_repos import autofix_lib
 from all_repos.grep import repos_matching
 
 # Find repos that have this file...
-FILE_NAME = "tox.ini"
+FILE_NAME = "pyproject.toml"
+# For pypackage-template
+# FILE_NAME = "project/pyproject.toml.jinja"
 # ... and which content contains this string.
-FILE_CONTAINS = "django32"
+FILE_CONTAINS = "Framework :: Django :: 3.2"
 # Git stuff
 GIT_COMMIT_MSG = (
     "feat: drop Django < 4.2 support\n\n"
@@ -21,34 +23,48 @@ GIT_BRANCH_NAME = "feat/drop-django-lt-42"
 def apply_fix():
     """Apply fix to a matching repo."""
     # 1. tox.ini
-    tox_ini = Path("tox.ini")
-    tox_ini_content = tox_ini.read_text()
-    tox_ini_replacements = {
-        "django{50,42,41}": "django{50,42}",
-        "django{50,42,41,40}": "django{50,42}",
-        "django{50,42,41,40,32}": "django{50,42}",
-        "django{42,41,40,32}": "django{42}",
-        "    django41: Django>=4.1,<4.2\n": "",
-        "    django40: Django>=4.0,<4.1\n": "",
-        "    django32: Django>=3.2,<4.0\n": "",
-    }
-    for from_str, to_str in tox_ini_replacements.items():
-        tox_ini_content = tox_ini_content.replace(from_str, to_str)
-    tox_ini.write_text(tox_ini_content)
+    tox_ini_paths = [
+        Path("tox.ini"),
+        Path("project/{% if is_django_package %}tox.ini{% endif %}.jinja"),
+    ]
+    for tox_ini in tox_ini_paths:
+        if not tox_ini.exists():
+            continue
+        tox_ini_content = tox_ini.read_text()
+        tox_ini_replacements = {
+            "django{50,42,41}": "django{50,42}",
+            "django{50,42,41,40}": "django{50,42}",
+            "django{50,42,41,40,32}": "django{50,42}",
+            "django{42,41,40,32}": "django{42}",
+            "    django41: Django>=4.1,<4.2\n": "",
+            "    django40: Django>=4.0,<4.1\n": "",
+            "    django32: Django>=3.2,<4.0\n": "",
+        }
+        for from_str, to_str in tox_ini_replacements.items():
+            tox_ini_content = tox_ini_content.replace(from_str, to_str)
+        tox_ini.write_text(tox_ini_content)
 
     # 2. pyproject.toml
-    pyproject_toml = Path("pyproject.toml")
-    pyproject_toml_content = pyproject_toml.read_text()
-    pyproject_toml_replacements = {
-        '    "Framework :: Django :: 3.2",\n': "",
-        '    "Framework :: Django :: 4.0",\n': "",
-        '    "Framework :: Django :: 4.1",\n': "",
-        'django = ">=3.2"': 'django = ">=4.2"',
-    }
-    for from_str, to_str in pyproject_toml_replacements.items():
-        pyproject_toml_content = pyproject_toml_content.replace(from_str, to_str)
-    pyproject_toml.write_text(pyproject_toml_content)
-    autofix_lib.run("poetry", "lock", "--no-update")
+    pyproject_toml_paths = [
+        Path("pyproject.toml"),
+        Path("project/pyproject.toml.jinja"),
+    ]
+    for index, pyproject_toml in enumerate(pyproject_toml_paths):
+        if not pyproject_toml.exists():
+            continue
+        pyproject_toml_content = pyproject_toml.read_text()
+        pyproject_toml_replacements = {
+            '    "Framework :: Django :: 3.2",\n': "",
+            '    "Framework :: Django :: 4.0",\n': "",
+            '    "Framework :: Django :: 4.1",\n': "",
+            'django = ">=3.2"': 'django = ">=4.2"',
+        }
+        for from_str, to_str in pyproject_toml_replacements.items():
+            pyproject_toml_content = pyproject_toml_content.replace(from_str, to_str)
+        pyproject_toml.write_text(pyproject_toml_content)
+
+        if index == 0:
+            autofix_lib.run("poetry", "lock", "--no-update")
 
 
 # You shouldn't need to change anything below this line
