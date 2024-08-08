@@ -7,26 +7,47 @@ from all_repos import autofix_lib
 from all_repos.grep import repos_matching
 
 # Find repos that have this file...
-FILE_NAME = ".github/labels.toml"
+FILE_NAMES = [
+    ".github/workflows/ci.yml",
+    "project/.github/workflows/ci.yml.jinja"
+]
 # ... and which content contains this string.
-FILE_CONTAINS = 'breaking'
+FILE_CONTAINS = 'pypa/gh-action-pypi-publish@release'
 # Git stuff
-GIT_COMMIT_MSG = "chore: add fund to list of labels"
-GIT_BRANCH_NAME = "chore/add-fund-label"
+GIT_COMMIT_MSG = "chore: attest build provenance"
+GIT_BRANCH_NAME = "chore/attest-provenance"
+
+NEW_CONTENT = """      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v1
+        if: steps.release.outputs.released == 'true'
+        with:
+          subject-path: "dist/*"
+
+"""
 
 
 def apply_fix():
     """Apply fix to a matching repo."""
-    new_content = (Path(__file__).parent / "labels.toml").read_text()
+    # ci.yml
+    print("starting new repo")
+    for file_name in FILE_NAMES:
+        file_path = Path(file_name)
+        if not file_path.exists():
+            continue
 
-    labels_toml = Path(FILE_NAME)
-    if labels_toml.exists():
-        labels_toml.write_text(new_content)
+        content = file_path.read_text()
+        if "actions/attest-build-provenance" in content:
+            continue
 
-    # Update pyproject template
-    labels_toml = Path(f"project/{FILE_NAME}")
-    if labels_toml.exists():
-        labels_toml.write_text(new_content)
+        content = content.replace(
+            "      - name: Publish package distributions to PyPI",
+            f"{NEW_CONTENT}      - name: Publish package distributions to PyPI"
+        )
+        content = content.replace(
+            "      id-token: write",
+            "      id-token: write\n      attestations: write"
+        )
+        file_path.write_text(content)
 
 
 # You shouldn't need to change anything below this line
@@ -36,7 +57,7 @@ def find_repos(config) -> set[str]:
     """Find matching repos using git grep."""
     repos = repos_matching(
         config,
-        (FILE_CONTAINS, "--", FILE_NAME),
+        (FILE_CONTAINS, "--", *FILE_NAMES),
     )
     return repos
 
