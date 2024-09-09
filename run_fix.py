@@ -8,46 +8,60 @@ from all_repos.grep import repos_matching
 
 # Find repos that have this file...
 FILE_NAMES = [
-    ".github/workflows/ci.yml",
-    "project/.github/workflows/ci.yml.jinja"
+    "pyproject.toml",
 ]
 # ... and which content contains this string.
-FILE_CONTAINS = 'pypa/gh-action-pypi-publish@release'
+FILE_CONTAINS = "tool.semantic_release.changelog"
 # Git stuff
-GIT_COMMIT_MSG = "chore: attest build provenance"
-GIT_BRANCH_NAME = "chore/attest-provenance"
+GIT_COMMIT_MSG = "chore: ignore commits with unknown category in PSR "
+GIT_BRANCH_NAME = "chore/ignore-unknown-category-commits-psr"
 
-NEW_CONTENT = """      - name: Attest build provenance
-        uses: actions/attest-build-provenance@v1
-        if: steps.release.outputs.released == 'true'
-        with:
-          subject-path: "dist/*"
+BEFORE_SECTION = """[tool.semantic_release.changelog]
+exclude_commit_patterns = [
+    "chore*",
+    "ci*",
+]"""
+AFTER_SECTION = """[tool.semantic_release.changelog]
+exclude_commit_patterns = [
+    "chore.*",
+    "ci.*",
+    "Merge pull request .*",
+]"""
 
-"""
+FOR_LOOP_BEFORE = """{%- for category, commits in release["elements"].items() %}"""
+FOR_LOOP_AFTER = """{%- for category, commits in release["elements"].items() %}{% if category != "unknown" %}"""
+
+END_FOR_BEFORE = """{%- endfor %}{# for category, commits #}"""
+END_FOR_AFTER = """{%- endif %}{% endfor %}{# for category, commits #}"""
 
 
 def apply_fix():
     """Apply fix to a matching repo."""
-    # ci.yml
-    print("starting new repo")
+    # pyproject.toml
     for file_name in FILE_NAMES:
         file_path = Path(file_name)
         if not file_path.exists():
             continue
 
         content = file_path.read_text()
-        if "actions/attest-build-provenance" in content:
+        if AFTER_SECTION in content:
             continue
 
-        content = content.replace(
-            "      - name: Publish package distributions to PyPI",
-            f"{NEW_CONTENT}      - name: Publish package distributions to PyPI"
-        )
-        content = content.replace(
-            "      id-token: write",
-            "      id-token: write\n      attestations: write"
-        )
+        content = content.replace(BEFORE_SECTION, AFTER_SECTION)
         file_path.write_text(content)
+
+    # changelog template
+    file_path = Path("templates/CHANGELOG.md.j2")
+    if not file_path.exists():
+        return
+
+    content = file_path.read_text()
+    if """{% if category != "unknown" %}""" in content:
+        return
+
+    content = content.replace(FOR_LOOP_BEFORE, FOR_LOOP_AFTER)
+    content = content.replace(END_FOR_BEFORE, END_FOR_AFTER)
+    file_path.write_text(content)
 
 
 # You shouldn't need to change anything below this line
