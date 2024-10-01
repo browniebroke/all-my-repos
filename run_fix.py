@@ -8,36 +8,25 @@ from all_repos.grep import repos_matching
 
 # Find repos that have this file...
 FILE_NAMES = [
-    "pyproject.toml",
+    ".pre-commit-config.yaml",
+    "project/.pre-commit-config.yaml",
 ]
 # ... and which content contains this string.
-FILE_CONTAINS = "tool.semantic_release.changelog"
+FILE_CONTAINS = "https://github.com/python-poetry/poetry"
 # Git stuff
-GIT_COMMIT_MSG = "chore: ignore commits with unknown category in PSR "
-GIT_BRANCH_NAME = "chore/ignore-unknown-category-commits-psr"
+GIT_COMMIT_MSG = "chore: add pyproject-fmt to pre-commit config"
+GIT_BRANCH_NAME = "chore/add-pyproject-fmt-pre-commit"
 
-BEFORE_SECTION = """[tool.semantic_release.changelog]
-exclude_commit_patterns = [
-    "chore*",
-    "ci*",
-]"""
-AFTER_SECTION = """[tool.semantic_release.changelog]
-exclude_commit_patterns = [
-    "chore.*",
-    "ci.*",
-    "Merge pull request .*",
-]"""
-
-FOR_LOOP_BEFORE = """{%- for category, commits in release["elements"].items() %}"""
-FOR_LOOP_AFTER = """{%- for category, commits in release["elements"].items() %}{% if category != "unknown" %}"""
-
-END_FOR_BEFORE = """{%- endfor %}{# for category, commits #}"""
-END_FOR_AFTER = """{%- endif %}{% endfor %}{# for category, commits #}"""
+BEFORE_SECTION = """  - repo: https://github.com/python-poetry/poetry"""
+AFTER_SECTION = """  - repo: https://github.com/tox-dev/pyproject-fmt
+    rev: "2.2.3"
+    hooks:
+      - id: pyproject-fmt
+  - repo: https://github.com/python-poetry/poetry"""
 
 
 def apply_fix():
     """Apply fix to a matching repo."""
-    # pyproject.toml
     for file_name in FILE_NAMES:
         file_path = Path(file_name)
         if not file_path.exists():
@@ -49,19 +38,6 @@ def apply_fix():
 
         content = content.replace(BEFORE_SECTION, AFTER_SECTION)
         file_path.write_text(content)
-
-    # changelog template
-    file_path = Path("templates/CHANGELOG.md.j2")
-    if not file_path.exists():
-        return
-
-    content = file_path.read_text()
-    if """{% if category != "unknown" %}""" in content:
-        return
-
-    content = content.replace(FOR_LOOP_BEFORE, FOR_LOOP_AFTER)
-    content = content.replace(END_FOR_BEFORE, END_FOR_AFTER)
-    file_path.write_text(content)
 
 
 # You shouldn't need to change anything below this line
