@@ -8,21 +8,14 @@ from all_repos.grep import repos_matching
 
 # Find repos that have this file...
 FILE_NAMES = [
-    ".pre-commit-config.yaml",
-    "project/.pre-commit-config.yaml",
+    ".github/workflows/ci.yml",
+    "project/.github/workflows/ci.yml.jinja",
 ]
 # ... and which content contains this string.
-FILE_CONTAINS = "https://github.com/python-poetry/poetry"
+FILE_CONTAINS = "python-semantic-release/upload-to-gh-release"
 # Git stuff
-GIT_COMMIT_MSG = "chore: add pyproject-fmt to pre-commit config"
-GIT_BRANCH_NAME = "chore/add-pyproject-fmt-pre-commit"
-
-BEFORE_SECTION = """  - repo: https://github.com/python-poetry/poetry"""
-AFTER_SECTION = """  - repo: https://github.com/tox-dev/pyproject-fmt
-    rev: "2.2.3"
-    hooks:
-      - id: pyproject-fmt
-  - repo: https://github.com/python-poetry/poetry"""
+GIT_COMMIT_MSG = "ci: migrate upload-to-gh-release ci action to publish-action"
+GIT_BRANCH_NAME = "ci/migrate-psr-upload-publish-action"
 
 
 def apply_fix():
@@ -33,10 +26,10 @@ def apply_fix():
             continue
 
         content = file_path.read_text()
-        if AFTER_SECTION in content:
-            continue
-
-        content = content.replace(BEFORE_SECTION, AFTER_SECTION)
+        content = content.replace(
+            "uses: python-semantic-release/upload-to-gh-release@main",
+            "uses: python-semantic-release/publish-action@v9.8.1",
+        )
         file_path.write_text(content)
 
 
