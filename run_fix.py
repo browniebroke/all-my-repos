@@ -12,10 +12,41 @@ FILE_NAMES = [
     "project/.github/workflows/ci.yml.jinja",
 ]
 # ... and which content contains this string.
-FILE_CONTAINS = "python-semantic-release/upload-to-gh-release"
+FILE_CONTAINS = "python-semantic-release/python-semantic-release"
 # Git stuff
-GIT_COMMIT_MSG = "ci: migrate upload-to-gh-release ci action to publish-action"
-GIT_BRANCH_NAME = "ci/migrate-psr-upload-publish-action"
+GIT_COMMIT_MSG = "ci: ensure release is on the commit as the workflow"
+GIT_BRANCH_NAME = "ci/release-git-sha"
+
+PREVIOUS_CHECKOUT = """      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.head_ref || github.ref_name }}
+
+      # Do a dry run of PSR
+      - name: Test release"""
+AFTER_CHECKOUT = """      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+
+      - name: Checkout commit for release
+        run: |
+          git checkout -B ${{ github.ref_name }} ${{ github.sha }}
+
+      # Do a dry run of PSR
+      - name: Test release"""
+
+PREVIOUS_PUBLISH = """      - name: Publish package distributions to GitHub Releases
+        uses: python-semantic-release/publish-action@v9.12.2
+        if: steps.release.outputs.released == 'true'
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}"""
+AFTER_PUBLISH = """      - name: Publish package distributions to GitHub Releases
+        uses: python-semantic-release/publish-action@v9.12.2
+        if: steps.release.outputs.released == 'true'
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ steps.release.outputs.tag }}"""
 
 
 def apply_fix():
@@ -26,11 +57,15 @@ def apply_fix():
             continue
 
         content = file_path.read_text()
-        content = content.replace(
-            "uses: python-semantic-release/upload-to-gh-release@main",
-            "uses: python-semantic-release/publish-action@v9.8.1",
-        )
+        if 'git checkout -B ${{ github.ref_name }} ${{ github.sha }}' in content:
+            continue
+
+        content = content.replace(PREVIOUS_CHECKOUT, AFTER_CHECKOUT)
+        content = content.replace(PREVIOUS_PUBLISH, AFTER_PUBLISH)
+
         file_path.write_text(content)
+
+    print("Done with repo")
 
 
 # You shouldn't need to change anything below this line
