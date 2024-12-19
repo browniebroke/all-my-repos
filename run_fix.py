@@ -23,10 +23,22 @@ def apply_fix():
 
     # 1. pyproject.toml
     pyproject_toml = Path("pyproject.toml")
-    content = pyproject_toml.read_text()
+    content = (
+        pyproject_toml
+        .read_text()
+        .replace(
+            # From
+            "[build-system]\n"
+            'requires = ["pdm-backend"]'
+            'build-backend = "pdm.backend"',
+            # To
+            "[build-system]\n"
+            'build-backend = "setuptools.build_meta"'
+            'requires = [ "setuptools" ]',
+        )
+    )
 
     inside_poetry_table = False
-    inside_build_system_table = False
     inside_pdm_build_table = False
     new_lines = []
 
@@ -36,13 +48,6 @@ def apply_fix():
         elif line.startswith("[") and inside_poetry_table:
             inside_poetry_table = False
         if inside_poetry_table:
-            continue
-
-        if line == "[build-system]":
-            inside_build_system_table = True
-        elif line.startswith("[") and inside_build_system_table:
-            inside_build_system_table = False
-        if inside_build_system_table:
             continue
 
         if line == "[tool.pdm.build]":
