@@ -255,6 +255,32 @@ def apply_fix():
         )
         ci_yml.write_text(new_content)
 
+    # 9. readthedocs config
+    readthedocs_yml = Path(".readthedocs.yml")
+    if readthedocs_yml.exists():
+        new_content = (
+            readthedocs_yml
+            .read_text()
+            .replace(
+                # From
+                '  jobs:\n'
+                '    post_create_environment:\n'
+                '      # Install poetry\n'
+                '      - python -m pip install poetry\n'
+                '    post_install:\n'
+                '      # Install dependencies, reusing RTD virtualenv\n'
+                '      - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH poetry install --with docs',
+                # to
+                '  commands:\n'
+                '    - asdf plugin add uv\n'
+                '    - asdf install uv latest\n'
+                '    - asdf global uv latest\n'
+                '    - uv sync --only-group docs --frozen\n'
+                '    - uv run -m sphinx -T -b html -d docs/_build/doctrees -D language=en docs $READTHEDOCS_OUTPUT/html',
+            )
+        )
+        readthedocs_yml.write_text(new_content)
+
     print("Done with repo")
 
 
