@@ -217,6 +217,13 @@ def apply_fix():
                 # to
                 "      - uses: codecov/codecov-action@v4",
             )
+            .replace(
+                # from
+                "      - name: Upload coverage to Codecov\n"
+                "        uses: codecov/codecov-action@v5",
+                # to
+                "      - uses: codecov/codecov-action@v5",
+            )
         )
         ci_yml.write_text(new_content)
 
