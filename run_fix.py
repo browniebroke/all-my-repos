@@ -240,6 +240,13 @@ def apply_fix():
             )
             .replace(
                 # from
+                "      - name: Test with Pytest\n"
+                "        run: poetry run pytest",
+                # to
+                "      - run: uv run pytest",
+            )
+            .replace(
+                # from
                 "      - name: Upload coverage to Codecov\n"
                 "        uses: codecov/codecov-action@v4",
                 # to
