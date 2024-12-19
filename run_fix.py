@@ -19,6 +19,10 @@ GIT_BRANCH_NAME = "packaging/migrate-to-uv"
 
 def apply_fix():
     """Apply fix to a matching repo."""
+    if Path("tox.ini").exists():
+        # Django package: will need more work
+        return
+
     autofix_lib.run("pdm", "import", "-f", "poetry", "pyproject.toml")
 
     # 1. pyproject.toml
@@ -29,11 +33,11 @@ def apply_fix():
         .replace(
             # From
             "[build-system]\n"
-            'requires = ["pdm-backend"]'
+            'requires = ["pdm-backend"]\n'
             'build-backend = "pdm.backend"',
             # To
             "[build-system]\n"
-            'build-backend = "setuptools.build_meta"'
+            'build-backend = "setuptools.build_meta"\n'
             'requires = [ "setuptools" ]',
         )
     )
@@ -220,7 +224,7 @@ def apply_fix():
                 "      - name: Upload coverage to Codecov\n"
                 "        uses: codecov/codecov-action@v4",
                 # to
-                "      - uses: codecov/codecov-action@v4",
+                "      - uses: codecov/codecov-action@v5",
             )
             .replace(
                 # from
