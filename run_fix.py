@@ -151,8 +151,8 @@ def apply_fix():
         new_content = (
             readme_md
             .read_text()
-            .replace("https://python-poetry.org/", "https://github.com/astral-sh/uv")
             .replace("https://python-poetry.org/badge/v0.json", "https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json")
+            .replace("https://python-poetry.org/", "https://github.com/astral-sh/uv")
             .replace('alt="Poetry"', 'alt="uv"')
         )
         readme_md.write_text(new_content)
