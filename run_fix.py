@@ -157,7 +157,7 @@ def apply_fix():
         )
         readme_md.write_text(new_content)
 
-    # CI Workflow
+    # 8. CI Workflow
     ci_yml = Path(".github/workflows/ci.yml")
     if ci_yml.exists():
         new_content = (
@@ -200,6 +200,25 @@ def apply_fix():
             .replace(
                 # from
                 "      - run: poetry install\n",
+                # to
+                '      - uses: astral-sh/setup-uv@v4\n'
+                '        with:\n'
+                '          enable-cache: "true"\n'
+                '      - run: uv sync --no-python-downloads\n'
+            )
+            .replace(
+                # from
+                "      - name: Install Dependencies\n"
+                "        run: poetry install --without docs\n",
+                # to
+                '      - uses: astral-sh/setup-uv@v4\n'
+                '        with:\n'
+                '          enable-cache: "true"\n'
+                '      - run: uv sync --no-python-downloads\n'
+            )
+            .replace(
+                # from
+                "      - run: poetry install --without docs\n",
                 # to
                 '      - uses: astral-sh/setup-uv@v4\n'
                 '        with:\n'
