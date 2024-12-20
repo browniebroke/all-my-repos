@@ -101,7 +101,7 @@ def apply_fix():
     rev: 1.8.5
     hooks:
       - id: poetry-check""", """  - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.5.10
+    rev: 0.5.11
     hooks:
       - id: uv-lock""")
         new_content = new_content.replace(
