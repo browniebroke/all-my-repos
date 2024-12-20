@@ -1,19 +1,23 @@
-[tool.poetry]
+[dependency-groups]
+dev = []
+
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = [ "setuptools" ]
+
+
+[project]
+authors = [
+    {name = "Bruno Alla", email = "alla.brunoo@gmail.com"},
+]
+license = {text = "MIT"}
+requires-python = "<4.0,>=3.11"
+dependencies = [
+    "all-repos<2.0,>=1.21",
+    "all-repos-envvar<1.0,>=0.2",
+    "tomli<3.0,>=2.0",
+]
 name = "bulk-update"
 version = "0.1.0"
 description = "To run all-repos"
-authors = ["Bruno Alla <alla.brunoo@gmail.com>"]
-license = "MIT"
 package-mode = false
-
-[tool.poetry.dependencies]
-python = "^3.11"
-all-repos = "^1.21"
-all-repos-envvar = "^0.2"
-tomli = "^2.0"
-
-[tool.poetry.group.dev.dependencies]
-
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
