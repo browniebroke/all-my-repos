@@ -13,7 +13,7 @@ FILE_NAMES = [
 # ... and which content contains this string.
 FILE_CONTAINS = "content-hash"
 # Git stuff
-GIT_COMMIT_MSG = "chore: migrate migrate packaging to uv"
+GIT_COMMIT_MSG = "chore: migrate packaging to uv"
 GIT_BRANCH_NAME = "packaging/migrate-to-uv"
 
 
