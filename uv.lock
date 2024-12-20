@@ -1,5 +1,5 @@
 version = 1
-requires-python = ">=3.11, <4.0"
+requires-python = ">=3.11"
 
 [[package]]
 name = "all-repos"
@@ -39,9 +39,9 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "all-repos", specifier = ">=1.21,<2.0" },
-    { name = "all-repos-envvar", specifier = ">=0.2,<1.0" },
-    { name = "tomli", specifier = ">=2.0,<3.0" },
+    { name = "all-repos", specifier = ">=1.21,<2" },
+    { name = "all-repos-envvar", specifier = ">=0.2,<1" },
+    { name = "tomli", specifier = ">=2,<3" },
 ]
 
 [package.metadata.requires-dev]
