@@ -22,6 +22,9 @@ def apply_fix():
     if Path("tox.ini").exists():
         # Django package: will need more work
         return
+    if Path("copier.yml").exists():
+        # template package: ignore
+        return
 
     autofix_lib.run("pdm", "import", "-f", "poetry", "pyproject.toml")
 
