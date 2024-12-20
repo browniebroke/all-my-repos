@@ -30,7 +30,7 @@ wheels = [
 [[package]]
 name = "bulk-update"
 version = "0.1.0"
-source = { editable = "." }
+source = { virtual = "." }
 dependencies = [
     { name = "all-repos" },
     { name = "all-repos-envvar" },
