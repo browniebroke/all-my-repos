@@ -1,19 +1,24 @@
-[dependency-groups]
-dev = []
-
-
 [project]
-authors = [
-    {name = "Bruno Alla", email = "alla.brunoo@gmail.com"},
-]
-license = {text = "MIT"}
-requires-python = "<4.0,>=3.11"
-dependencies = [
-    "all-repos<2.0,>=1.21",
-    "all-repos-envvar<1.0,>=0.2",
-    "tomli<3.0,>=2.0",
-]
 name = "bulk-update"
 version = "0.1.0"
 description = "To run all-repos"
+license = { text = "MIT" }
+authors = [
+  { name = "Bruno Alla", email = "alla.brunoo@gmail.com" },
+]
+requires-python = "<4.0,>=3.11"
+classifiers = [
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+]
+dependencies = [
+  "all-repos>=1.21,<2",
+  "all-repos-envvar>=0.2,<1",
+  "tomli>=2,<3",
+]
 package-mode = false
+
+[dependency-groups]
+dev = [  ]
