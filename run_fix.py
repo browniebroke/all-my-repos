@@ -192,18 +192,14 @@ def apply_fix():
                 "      - name: Install Dependencies\n"
                 "        run: poetry install\n",
                 # to
-                '      - uses: astral-sh/setup-uv@v4\n'
-                '        with:\n'
-                '          enable-cache: "true"\n'
+                '      - uses: astral-sh/setup-uv@v5\n'
                 '      - run: uv sync --no-python-downloads\n'
             )
             .replace(
                 # from
                 "      - run: poetry install\n",
                 # to
-                '      - uses: astral-sh/setup-uv@v4\n'
-                '        with:\n'
-                '          enable-cache: "true"\n'
+                '      - uses: astral-sh/setup-uv@v5\n'
                 '      - run: uv sync --no-python-downloads\n'
             )
             .replace(
@@ -211,18 +207,14 @@ def apply_fix():
                 "      - name: Install Dependencies\n"
                 "        run: poetry install --without docs\n",
                 # to
-                '      - uses: astral-sh/setup-uv@v4\n'
-                '        with:\n'
-                '          enable-cache: "true"\n'
+                '      - uses: astral-sh/setup-uv@v5\n'
                 '      - run: uv sync --no-python-downloads\n'
             )
             .replace(
                 # from
                 "      - run: poetry install --without docs\n",
                 # to
-                '      - uses: astral-sh/setup-uv@v4\n'
-                '        with:\n'
-                '          enable-cache: "true"\n'
+                '      - uses: astral-sh/setup-uv@v5\n'
                 '      - run: uv sync --no-python-downloads\n'
             )
             .replace(
