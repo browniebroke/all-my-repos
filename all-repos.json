@@ -5,7 +5,7 @@
         "username": "browniebroke"
     },
     "include": "browniebroke|LesCapsules|cozinhadosbonitos",
-    "exclude": "pre-commit-autoupdate-action|deploy-lighthouse-report-action|yarn-upgrade-action|github-app-test|ip-mirror|dailycodingproblem|macbook-scripts|actions-playground|django-custom-lookup-demo|django-tinymce4-widget|modeltrans-mypy-bug|django-suspicious-filename-too-long-with-dot|semaphoreci-notifier|semaphoreci-notifier-2|pycharm-compose-refresh",
+    "exclude": "pre-commit-autoupdate-action|deploy-lighthouse-report-action|yarn-upgrade-action|github-app-test|ip-mirror|dailycodingproblem|macbook-scripts|actions-playground|django-custom-lookup-demo|django-tinymce4-widget|modeltrans-mypy-bug|django-suspicious-filename-too-long-with-dot|semaphoreci-notifier|semaphoreci-notifier-2|pycharm-compose-refresh|cookiecut-drf-to-ninja",
     "push": "all_repos_envvar.push",
     "push_settings": {
         "username": "browniebroke"
