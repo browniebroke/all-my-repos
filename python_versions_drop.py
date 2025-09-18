@@ -9,12 +9,12 @@ from all_repos.grep import repos_matching
 # Find repos that have this file...
 FILE_NAMES = ["pyproject.toml", "project/pyproject.toml.jinja"]
 # ... and which content contains this string.
-FILE_CONTAINS = 'python = "^3.8"'
+FILE_CONTAINS = 'requires-python = ">=3.9"'
 # Git stuff
 GIT_COMMIT_MSG = (
-    "feat: drop support for Python 3.8"
+    "feat: drop support for Python 3.9"
 )
-GIT_BRANCH_NAME = "feat/drop-python-3.8"
+GIT_BRANCH_NAME = "feat/drop-python-3.9"
 
 
 def apply_fix():
@@ -29,7 +29,7 @@ def apply_fix():
             continue
         tox_ini_content = tox_ini.read_text()
         tox_ini_replacements = {
-            "    py38-django{42}\n": "",
+            "    py39-django{42}\n": "",
         }
         for from_str, to_str in tox_ini_replacements.items():
             tox_ini_content = tox_ini_content.replace(from_str, to_str)
@@ -45,15 +45,16 @@ def apply_fix():
             continue
         pyproject_toml_content = pyproject_toml.read_text()
         pyproject_toml_replacements = {
-            'python = "^3.8"': 'python = "^3.9"',
-            'target-version = "py38"': 'target-version = "py39"',
+            'requires-python = ">=3.9"': 'requires-python = ">=3.10"',
+            'target-version = "py39"': 'target-version = "py310"',
+            '  "Programming Language :: Python :: 3.9",\n': "",
         }
         for from_str, to_str in pyproject_toml_replacements.items():
             pyproject_toml_content = pyproject_toml_content.replace(from_str, to_str)
         pyproject_toml.write_text(pyproject_toml_content)
 
         if index == 0:
-            autofix_lib.run("poetry", "lock", "--no-update")
+            autofix_lib.run("uv", "lock")
 
     # 3. ci.yml
     ci_yml_paths = [
@@ -64,7 +65,7 @@ def apply_fix():
         if not ci_yml.exists():
             continue
         ci_yml_content = ci_yml.read_text()
-        ci_yml_content = ci_yml_content.replace('          - "3.8"\n', "")
+        ci_yml_content = ci_yml_content.replace('          - "3.9"\n', "")
         ci_yml.write_text(ci_yml_content)
 
 
