@@ -28,7 +28,7 @@ def apply_fix():
         if not tox_ini.exists():
             continue
         tox_ini_content = tox_ini.read_text()
-        if "py314-django{52}" in tox_ini_content:
+        if "py314" in tox_ini_content:
             continue
         tox_ini_replacements = {
             "env_list =\n": "env_list =\n    py314-django{52}\n",
