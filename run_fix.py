@@ -7,36 +7,47 @@ from all_repos import autofix_lib
 from all_repos.grep import repos_matching
 
 # Find repos that have this file...
-FILE_NAMES = ["pyproject.toml"]
+FILE_NAMES = [".readthedocs.yml", "project/.readthedocs.yml"]
 # ... and which content contains this string.
-FILE_CONTAINS = "setuptools.build_meta"
+FILE_CONTAINS = "sphinx"
 # Git stuff
-GIT_COMMIT_MSG = "fix: use SPDX expression for license"
-GIT_BRANCH_NAME = "fix/spdx-license"
+GIT_COMMIT_MSG = "chore: update RTD config to latest convention"
+GIT_BRANCH_NAME = "chore/rtd-config"
+
+
+NEW_CONTENT = """# Read the Docs configuration file
+# See https://docs.readthedocs.io/en/stable/config-file/v2.html for details
+
+version: 2
+
+build:
+  os: ubuntu-24.04
+  tools:
+    python: "3.13"
+  jobs:
+    pre_create_environment:
+      - asdf plugin add uv
+      - asdf install uv latest
+      - asdf global uv latest
+    create_environment:
+      - uv venv "${READTHEDOCS_VIRTUALENV_PATH}"
+    install:
+      - UV_PROJECT_ENVIRONMENT="${READTHEDOCS_VIRTUALENV_PATH}" uv sync --frozen --no-dev --group docs
+
+sphinx:
+  configuration: docs/conf.py
+"""
 
 
 def apply_fix():
     """Apply fix to a matching repo."""
-    pyproject_toml = Path("pyproject.toml")
-    content = pyproject_toml.read_text()
-    if (
-        'requires = [ "setuptools>=77.0.3" ]' in content
-        and 'license = "MIT"' in content
-    ):
-        return
-
-    content = content.replace(
-        # From
-        'requires = [ "setuptools" ]',
-        # To
-        'requires = [ "setuptools>=77.0.3" ]',
-    )
-    content = content.replace(
-        'license = { text = "MIT" }',
-        'license = "MIT"',
-    )
-    pyproject_toml.write_text(content)
-    print("Done with repo")
+    for file_name in FILE_NAMES:
+        file_path = Path(file_name)
+        if not file_path.exists():
+            continue
+        if "UV_PROJECT_ENVIRONMENT" in file_path.read_text():
+            continue
+        file_path.write_text(NEW_CONTENT)
 
 
 # You shouldn't need to change anything below this line
