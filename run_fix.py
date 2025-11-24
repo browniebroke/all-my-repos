@@ -7,36 +7,12 @@ from all_repos import autofix_lib
 from all_repos.grep import repos_matching
 
 # Find repos that have this file...
-FILE_NAMES = [".readthedocs.yml", "project/.readthedocs.yml"]
+FILE_NAMES = [".github/workflows/upgrader.yml", "project/.github/workflows/upgrader.yml.jinja"]
 # ... and which content contains this string.
-FILE_CONTAINS = "sphinx"
+FILE_CONTAINS = "uv-upgrade.yml"
 # Git stuff
-GIT_COMMIT_MSG = "chore: update RTD config to latest convention"
-GIT_BRANCH_NAME = "chore/rtd-config"
-
-
-NEW_CONTENT = """# Read the Docs configuration file
-# See https://docs.readthedocs.io/en/stable/config-file/v2.html for details
-
-version: 2
-
-build:
-  os: ubuntu-24.04
-  tools:
-    python: "3.13"
-  jobs:
-    pre_create_environment:
-      - asdf plugin add uv
-      - asdf install uv latest
-      - asdf global uv latest
-    create_environment:
-      - uv venv "${READTHEDOCS_VIRTUALENV_PATH}"
-    install:
-      - UV_PROJECT_ENVIRONMENT="${READTHEDOCS_VIRTUALENV_PATH}" uv sync --frozen --no-dev --group docs
-
-sphinx:
-  configuration: docs/conf.py
-"""
+GIT_COMMIT_MSG = "chore: remove upgrader workflow"
+GIT_BRANCH_NAME = "chore/remove-upgrader"
 
 
 def apply_fix():
@@ -45,9 +21,7 @@ def apply_fix():
         file_path = Path(file_name)
         if not file_path.exists():
             continue
-        if "UV_PROJECT_ENVIRONMENT" in file_path.read_text():
-            continue
-        file_path.write_text(NEW_CONTENT)
+        file_path.unlink(missing_ok=True)
 
 
 # You shouldn't need to change anything below this line
