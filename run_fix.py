@@ -7,9 +7,9 @@ from all_repos import autofix_lib
 from all_repos.grep import repos_matching
 
 # Find repos that have this file...
-FILE_NAMES = [".github/workflows/upgrader.yml", "project/.github/workflows/upgrader.yml.jinja"]
+FILE_NAMES = [".github/workflows/npm-upgrade.yml"]
 # ... and which content contains this string.
-FILE_CONTAINS = "uv-upgrade.yml"
+FILE_CONTAINS = "npm-upgrade.yml"
 # Git stuff
 GIT_COMMIT_MSG = "chore: remove upgrader workflow"
 GIT_BRANCH_NAME = "chore/remove-upgrader"
