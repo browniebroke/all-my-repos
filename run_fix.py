@@ -7,12 +7,12 @@ from all_repos import autofix_lib
 from all_repos.grep import repos_matching
 
 # Find repos that have this file...
-FILE_NAMES = [".github/workflows/npm-upgrade.yml"]
+FILE_NAMES = ["pyproject.toml", "project/pyproject.toml.jinja"]
 # ... and which content contains this string.
-FILE_CONTAINS = "npm-upgrade.yml"
+FILE_CONTAINS = "ini_options.pythonpath"
 # Git stuff
-GIT_COMMIT_MSG = "chore: remove upgrader workflow"
-GIT_BRANCH_NAME = "chore/remove-upgrader"
+GIT_COMMIT_MSG = "chore: migrate pytest config to version 9"
+GIT_BRANCH_NAME = "chore/pytest-9-config"
 
 
 def apply_fix():
@@ -21,7 +21,25 @@ def apply_fix():
         file_path = Path(file_name)
         if not file_path.exists():
             continue
-        file_path.unlink(missing_ok=True)
+        file_content = file_path.read_text()
+
+        # Replace old style table
+        file_content = file_content.replace("[tool.pytest.ini_options]", "[tool.pytest]")
+
+        # Initialise loop variables
+        inside_pytest_section = False
+        updated_lines = []
+
+        for line in file_content.splitlines():
+            if line == "[tool.pytest]":
+                inside_pytest_section = True
+            elif line.startswith("[tool.") and not line.startswith("[tool.pytest") and inside_pytest_section:
+                inside_pytest_section = False
+            elif inside_pytest_section:
+                line = line.removeprefix("ini_options.")
+            updated_lines.append(line)
+
+        file_path.write_text("\n".join(updated_lines) + "\n")
 
 
 # You shouldn't need to change anything below this line
