@@ -11,12 +11,17 @@ FILE_NAMES = ["pyproject.toml", "project/pyproject.toml.jinja"]
 # ... and which content contains this string.
 FILE_CONTAINS = "Framework :: Django"
 # Git stuff
-GIT_COMMIT_MSG = "feat: add Django 5.1 support"
-GIT_BRANCH_NAME = "feat/add-django-5.1"
+GIT_COMMIT_MSG = "feat: add Django 6.1 support"
+GIT_BRANCH_NAME = "feat/add-django-6.1"
 
 
 def apply_fix():
     """Apply fix to a matching repo."""
+    pyproj = Path("pyproject.toml")
+    if pyproj.exists() and "Framework :: Django :: 6.1" in pyproj.read_text():
+        # Idempotent: skip if already applied
+        return
+
     # 1. tox.ini
     tox_ini_paths = [
         Path("tox.ini"),
@@ -27,8 +32,8 @@ def apply_fix():
             continue
         tox_ini_content = tox_ini.read_text()
         tox_ini_replacements = {
-            "django{50,42}": "django{51,50,42}",
-            "    django50: Django>=5.0,<5.1": "    django51: Django>=5.1a1,<5.2\n    django50: Django>=5.0,<5.1",
+            "-django{60,52}": "-django{61,60,52}",
+            "    django60: django60": "    django61: django61\n    django60: django60",
         }
         for from_str, to_str in tox_ini_replacements.items():
             tox_ini_content = tox_ini_content.replace(from_str, to_str)
@@ -44,11 +49,16 @@ def apply_fix():
             continue
         pyproject_toml_content = pyproject_toml.read_text()
         pyproject_toml_replacements = {
-            '    "Framework :: Django :: 5.0",': '    "Framework :: Django :: 5.0",\n    "Framework :: Django :: 5.1",',
+            '  "Framework :: Django :: 6.0",': '  "Framework :: Django :: 6.0",\n  "Framework :: Django :: 6.1",',
+            'django60 = [ "django>=6.0a1,<6.1; python_version>=\'3.12\'" ]': 'django60 = [ "django>=6.0a1,<6.1; python_version>=\'3.12\'" ]\ndjango61 = [ "django>=6.1a1,<6.2; python_version>=\'3.12\'" ]',
+            '    { group = "django60" },':'    { group = "django61" },\n    { group = "django60" },',
         }
         for from_str, to_str in pyproject_toml_replacements.items():
             pyproject_toml_content = pyproject_toml_content.replace(from_str, to_str)
         pyproject_toml.write_text(pyproject_toml_content)
+
+        if index == 0:
+            autofix_lib.run("uv", "lock")
 
 
 # You shouldn't need to change anything below this line
