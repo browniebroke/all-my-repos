@@ -9,13 +9,13 @@ from all_repos.grep import repos_matching
 # Find repos that have this file...
 FILE_NAMES = ["pyproject.toml", "project/pyproject.toml.jinja"]
 # ... and which content contains this string.
-FILE_CONTAINS = "Framework :: Django :: 3.2"
+FILE_CONTAINS = "Framework :: Django :: 4.2"
 # Git stuff
 GIT_COMMIT_MSG = (
-    "feat: drop Django < 4.2 support\n\n"
-    "BREAKING CHANGE: drop support for Django < 4.2\n"
+    "feat: drop Django < 5.2 support\n\n"
+    "BREAKING CHANGE: drop support for Django < 5.2\n"
 )
-GIT_BRANCH_NAME = "feat/drop-django-lt-42"
+GIT_BRANCH_NAME = "feat/drop-django-lt-52"
 
 
 def apply_fix():
@@ -30,13 +30,12 @@ def apply_fix():
             continue
         tox_ini_content = tox_ini.read_text()
         tox_ini_replacements = {
-            "django{50,42,41}": "django{50,42}",
-            "django{50,42,41,40}": "django{50,42}",
-            "django{50,42,41,40,32}": "django{50,42}",
-            "django{42,41,40,32}": "django{42}",
-            "    django41: Django>=4.1,<4.2\n": "",
-            "    django40: Django>=4.0,<4.1\n": "",
-            "    django32: Django>=3.2,<4.0\n": "",
+            "django{60,52,51}": "django{60,52}",
+            "django{60,52,51,50,42}": "django{60,52}",
+            "django{52,51,50,42}": "django{52}",
+            "    django51: django51\n": "",
+            "    django50: django50\n": "",
+            "    django42: django42\n": "",
         }
         for from_str, to_str in tox_ini_replacements.items():
             tox_ini_content = tox_ini_content.replace(from_str, to_str)
@@ -52,17 +51,23 @@ def apply_fix():
             continue
         pyproject_toml_content = pyproject_toml.read_text()
         pyproject_toml_replacements = {
-            '    "Framework :: Django :: 3.2",\n': "",
-            '    "Framework :: Django :: 4.0",\n': "",
-            '    "Framework :: Django :: 4.1",\n': "",
-            'django = ">=3.2"': 'django = ">=4.2"',
+            '  "Framework :: Django :: 4.2",\n': "",
+            '  "Framework :: Django :: 5.0",\n': "",
+            '  "Framework :: Django :: 5.1",\n': "",
+            '  "django>=4.2",': '  "django>=5.2",',
+            'django42 = [ "django>=4.2a1,<5" ]\n': "",
+            'django50 = [ "django>=5.0a1,<5.1" ]\n': "",
+            'django51 = [ "django>=5.1a1,<5.2" ]\n': "",
+            '    { group = "django51" },\n': "",
+            '    { group = "django50" },\n': "",
+            '    { group = "django42" },\n': "",
         }
         for from_str, to_str in pyproject_toml_replacements.items():
             pyproject_toml_content = pyproject_toml_content.replace(from_str, to_str)
         pyproject_toml.write_text(pyproject_toml_content)
 
         if index == 0:
-            autofix_lib.run("poetry", "lock", "--no-update")
+            autofix_lib.run("uv", "lock")
 
 
 # You shouldn't need to change anything below this line
