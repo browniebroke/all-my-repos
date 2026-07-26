@@ -51,7 +51,7 @@ def apply_fix():
         pyproject_toml_replacements = {
             '  "Framework :: Django :: 6.0",': '  "Framework :: Django :: 6.0",\n  "Framework :: Django :: 6.1",',
             'django60 = [ "django>=6.0a1,<6.1; python_version>=\'3.12\'" ]': 'django60 = [ "django>=6.0a1,<6.1; python_version>=\'3.12\'" ]\ndjango61 = [ "django>=6.1a1,<6.2; python_version>=\'3.12\'" ]',
-            '    { group = "django60" },':'    { group = "django61" },\n    { group = "django60" },',
+            '    { group = "django60" },':'    { group = "django60" },\n    { group = "django61" },',
         }
         for from_str, to_str in pyproject_toml_replacements.items():
             pyproject_toml_content = pyproject_toml_content.replace(from_str, to_str)
