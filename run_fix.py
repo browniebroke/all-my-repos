@@ -7,13 +7,22 @@ from all_repos import autofix_lib
 from all_repos.grep import repos_matching
 
 # Find repos that have this file...
-FILE_NAMES = [".gitpod.yml"]
+FILE_NAMES = [".github/workflows/ci.yml"]
 # ... and which content contains this string.
-FILE_CONTAINS = "tasks"
+FILE_CONTAINS = "j178/prek-action"
 # Git stuff
-GIT_COMMIT_MSG = "chore: remove .gitpot.yml"
-GIT_BRANCH_NAME = "chore/remove-gitpod"
+GIT_COMMIT_MSG = "ci: fail lint job if prek fails"
+GIT_BRANCH_NAME = "ci/prek-failures"
 
+
+WITH_PC_LITE = '''        with:
+          msg: "chore: auto-fix from pre-commit hooks"'''
+WITH_PC_LITE_NEW = '''        if: always()
+        with:
+          msg: "chore: auto-fix from pre-commit hooks"
+      - name: Fail if hooks failed
+        if: steps.prek.outcome == 'failure'
+        run: exit 1'''
 
 def apply_fix():
     """
@@ -23,8 +32,23 @@ def apply_fix():
 
         autofix_lib.run("uv", "sync")
     """
-    gitpod_yml = Path(".gitpod.yml")
-    gitpod_yml.unlink(missing_ok=True)
+    file_paths = [
+        Path(".github/workflows/ci.yml"),
+        Path("project/.github/workflows/ci.yml.jinja"),
+    ]
+    for ci_yaml in file_paths:
+        if not ci_yaml.exists():
+            continue
+        content = ci_yaml.read_text()
+        if "Fail if hooks failed" in content:
+            continue
+
+        content = content.replace(
+            "        continue-on-error: true",
+            "        id: prek\n        continue-on-error: true"
+        )
+        content = content.replace(WITH_PC_LITE, WITH_PC_LITE_NEW)
+        ci_yaml.write_text(content)
 
 
 # You shouldn't need to change anything below this line
