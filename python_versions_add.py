@@ -11,10 +11,13 @@ FILE_NAMES = ["pyproject.toml", "project/pyproject.toml.jinja"]
 # ... and which content contains this string.
 FILE_CONTAINS = 'requires-python = ">=3.10"'
 # Git stuff
+NEW_VERSION = "3.15"
+PREV_VERSION = "3.14"
+NEW_VERSION_NO_DOT = NEW_VERSION.replace(".", "")
 GIT_COMMIT_MSG = (
-    "feat: add support for Python 3.14"
+    f"feat: add support for Python {NEW_VERSION}"
 )
-GIT_BRANCH_NAME = "feat/add-python-3.14"
+GIT_BRANCH_NAME = f"feat/add-python-{NEW_VERSION}"
 
 
 def apply_fix():
@@ -28,10 +31,10 @@ def apply_fix():
         if not tox_ini.exists():
             continue
         tox_ini_content = tox_ini.read_text()
-        if "py314" in tox_ini_content:
+        if f"py{NEW_VERSION_NO_DOT}" in tox_ini_content:
             continue
         tox_ini_replacements = {
-            "env_list =\n": "env_list =\n    py314-django{52}\n",
+            "env_list =\n": f"env_list =\n    py{NEW_VERSION_NO_DOT}-django{{61}}\n",
         }
         for from_str, to_str in tox_ini_replacements.items():
             tox_ini_content = tox_ini_content.replace(from_str, to_str)
@@ -47,12 +50,12 @@ def apply_fix():
             continue
 
         pyproject_toml_content = pyproject_toml.read_text()
-        if 'Programming Language :: Python :: 3.14' in pyproject_toml_content:
+        if f'Programming Language :: Python :: {NEW_VERSION}' in pyproject_toml_content:
             continue
 
         pyproject_replacements = {
-            '  "Programming Language :: Python :: 3.13",\n': '  "Programming Language :: Python :: 3.13",\n  "Programming Language :: Python :: 3.14",\n',
-            'max_supported_python = "3.13"': 'max_supported_python = "3.14"',
+            f'  "Programming Language :: Python :: {PREV_VERSION}",\n': f'  "Programming Language :: Python :: {PREV_VERSION}",\n  "Programming Language :: Python :: {NEW_VERSION}",\n',
+            f'max_supported_python = "{PREV_VERSION}"': f'max_supported_python = "{NEW_VERSION}"',
         }
 
         for from_str, to_str in pyproject_replacements.items():
@@ -70,15 +73,11 @@ def apply_fix():
         if not ci_yml.exists():
             continue
         ci_yml_content = ci_yml.read_text()
-        if '- "3.14"' in ci_yml_content:
+        if f'- "{NEW_VERSION}"' in ci_yml_content:
             continue
         ci_yml_content = ci_yml_content.replace(
-            '          - "3.13"\n',
-            '          - "3.13"\n          - "3.14"\n',
-        )
-        ci_yml_content = ci_yml_content.replace(
-            '          python-version: ${{ matrix.python-version }}\n',
-            '          python-version: ${{ matrix.python-version }}\n          allow-prereleases: true\n',
+            f'          - "{PREV_VERSION}"\n',
+            f'          - "{PREV_VERSION}"\n          - "{NEW_VERSION}"\n',
         )
         ci_yml.write_text(ci_yml_content)
 
