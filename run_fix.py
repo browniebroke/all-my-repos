@@ -20,14 +20,12 @@ CI_BEFORE = """
         with:
           python-version: ${{ matrix.python-version }}
           allow-prereleases: true
-      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
-      - run: uv sync --no-python-downloads"""
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0"""
 CI_AFTER = """
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
-          python-version: ${{ matrix.python-version }}
-      - run: uv sync"""
+          python-version: ${{ matrix.python-version }}"""
 
 LABELS_BEFORE = """
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -39,6 +37,16 @@ LABELS_BEFORE = """
         run: pip install labels
       - name: Sync config with Github
         run: labels -u ${{ github.repository_owner }} -t ${{ secrets.GITHUB_TOKEN }} sync -f .github/labels.toml"""
+LABELS_BEFORE_V2 = """
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: 3.x
+      - name: Install labels
+        run: pip install labels
+      - name: Sync config with Github
+        run: labels -u ${{ github.repository_owner }} -t ${{ secrets.GH_PAT }} sync -f .github/labels.toml"""
 LABELS_AFTER = """
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
@@ -67,6 +75,8 @@ def apply_fix():
             continue
 
         content = content.replace(CI_BEFORE, CI_AFTER)
+        content = content.replace("uv sync --no-python-downloads", "uv sync")
+        content = content.replace("uv pip install --system tox tox-uv", "uv tool install tox --with tox-uv")
         ci_yaml.write_text(content)
 
     # labels.yml
@@ -83,6 +93,7 @@ def apply_fix():
             continue
 
         content = content.replace(LABELS_BEFORE, LABELS_AFTER)
+        content = content.replace(LABELS_BEFORE_V2, LABELS_AFTER)
         labels_yml.write_text(content)
 
 
