@@ -9,20 +9,42 @@ from all_repos.grep import repos_matching
 # Find repos that have this file...
 FILE_NAMES = [".github/workflows/ci.yml"]
 # ... and which content contains this string.
-FILE_CONTAINS = "j178/prek-action"
+FILE_CONTAINS = "uses: actions/setup-python"
 # Git stuff
-GIT_COMMIT_MSG = "ci: fail lint job if prek fails"
-GIT_BRANCH_NAME = "ci/prek-failures"
+GIT_COMMIT_MSG = "ci: remove actions/setup-python in GHA"
+GIT_BRANCH_NAME = "ci/remove-actions-steup-python"
 
-
-WITH_PC_LITE = '''        with:
-          msg: "chore: auto-fix from pre-commit hooks"'''
-WITH_PC_LITE_NEW = '''        if: always()
+CI_BEFORE = """
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
-          msg: "chore: auto-fix from pre-commit hooks"
-      - name: Fail if hooks failed
-        if: steps.prek.outcome == 'failure'
-        run: exit 1'''
+          python-version: ${{ matrix.python-version }}
+          allow-prereleases: true
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+      - run: uv sync --no-python-downloads"""
+CI_AFTER = """
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: uv sync"""
+
+LABELS_BEFORE = """
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: 3.x
+      - name: Install labels
+        run: pip install labels
+      - name: Sync config with Github
+        run: labels -u ${{ github.repository_owner }} -t ${{ secrets.GITHUB_TOKEN }} sync -f .github/labels.toml"""
+LABELS_AFTER = """
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+      - name: Sync config with Github
+        run: uvx labels -u ${{ github.repository_owner }} -t ${{ secrets.GH_PAT }} sync -f .github/labels.toml"""
+
 
 def apply_fix():
     """
@@ -32,6 +54,7 @@ def apply_fix():
 
         autofix_lib.run("uv", "sync")
     """
+    # ci.yml
     file_paths = [
         Path(".github/workflows/ci.yml"),
         Path("project/.github/workflows/ci.yml.jinja"),
@@ -40,15 +63,27 @@ def apply_fix():
         if not ci_yaml.exists():
             continue
         content = ci_yaml.read_text()
-        if "Fail if hooks failed" in content:
+        if "actions/setup-python" not in content:
             continue
 
-        content = content.replace(
-            "        continue-on-error: true",
-            "        id: prek\n        continue-on-error: true"
-        )
-        content = content.replace(WITH_PC_LITE, WITH_PC_LITE_NEW)
+        content = content.replace(CI_BEFORE, CI_AFTER)
         ci_yaml.write_text(content)
+
+    # labels.yml
+    file_paths = [
+        Path(".github/workflows/labels.yml"),
+        Path("project/.github/workflows/labels.yml"),
+    ]
+    for labels_yml in file_paths:
+        if not labels_yml.exists():
+            continue
+
+        content = labels_yml.read_text()
+        if "actions/setup-python" not in content:
+            continue
+
+        content = content.replace(LABELS_BEFORE, LABELS_AFTER)
+        labels_yml.write_text(content)
 
 
 # You shouldn't need to change anything below this line
