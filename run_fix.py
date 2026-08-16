@@ -7,51 +7,26 @@ from all_repos import autofix_lib
 from all_repos.grep import repos_matching
 
 # Find repos that have this file...
-FILE_NAMES = [".github/workflows/ci.yml"]
+FILE_NAMES = [".pre-commit-config.yaml", "project/.pre-commit-config.yaml.jinja"]
 # ... and which content contains this string.
-FILE_CONTAINS = "uses: actions/setup-python"
+FILE_CONTAINS = "https://github.com/pre-commit/mirrors-mypy"
 # Git stuff
-GIT_COMMIT_MSG = "ci: remove actions/setup-python in GHA"
-GIT_BRANCH_NAME = "ci/remove-actions-steup-python"
+GIT_COMMIT_MSG = "chore: move mypy to local hook with django stubs"
+GIT_BRANCH_NAME = "chore/mypy-local-hook"
 
-CI_BEFORE = """
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
-        with:
-          python-version: ${{ matrix.python-version }}
-          allow-prereleases: true
-      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0"""
-CI_AFTER = """
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
-        with:
-          python-version: ${{ matrix.python-version }}"""
-
-LABELS_BEFORE = """
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - name: Set up Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
-        with:
-          python-version: 3.x
-      - name: Install labels
-        run: pip install labels
-      - name: Sync config with Github
-        run: labels -u ${{ github.repository_owner }} -t ${{ secrets.GITHUB_TOKEN }} sync -f .github/labels.toml"""
-LABELS_BEFORE_V2 = """
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - name: Set up Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
-        with:
-          python-version: 3.x
-      - name: Install labels
-        run: pip install labels
-      - name: Sync config with Github
-        run: labels -u ${{ github.repository_owner }} -t ${{ secrets.GH_PAT }} sync -f .github/labels.toml"""
-LABELS_AFTER = """
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
-      - name: Sync config with Github
-        run: uvx labels -u ${{ github.repository_owner }} -t ${{ secrets.GH_PAT }} sync -f .github/labels.toml"""
+PRE_COMMIT_BEFORE = """  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v2.3.0
+    hooks:
+      - id: mypy
+        additional_dependencies: []"""
+PRE_COMMIT_AFTER = """  - repo: local
+    hooks:
+      - id: local-mypy
+        name: mypy check
+        entry: uv run mypy src
+        require_serial: true
+        language: system
+        pass_filenames: false"""
 
 
 def apply_fix():
@@ -62,39 +37,38 @@ def apply_fix():
 
         autofix_lib.run("uv", "sync")
     """
-    # ci.yml
+    # pre-commit config
+    for pre_commit_cfg in FILE_NAMES:
+        pre_commit_cfg = Path(pre_commit_cfg)
+        if not pre_commit_cfg.exists():
+            continue
+        content = pre_commit_cfg.read_text()
+        if "https://github.com/pre-commit/mirrors-mypy" not in content:
+            continue
+
+        content = content.replace(PRE_COMMIT_BEFORE, PRE_COMMIT_AFTER)
+        pre_commit_cfg.write_text(content)
+
+    # pyproject.toml
     file_paths = [
-        Path(".github/workflows/ci.yml"),
-        Path("project/.github/workflows/ci.yml.jinja"),
+        Path("pyproject.toml"),
+        Path("project/pyproject.toml.jinja"),
     ]
-    for ci_yaml in file_paths:
-        if not ci_yaml.exists():
-            continue
-        content = ci_yaml.read_text()
-        if "actions/setup-python" not in content:
+    for idx, pyproject_toml in enumerate(file_paths):
+        if not pyproject_toml.exists():
             continue
 
-        content = content.replace(CI_BEFORE, CI_AFTER)
-        content = content.replace("uv sync --no-python-downloads", "uv sync")
-        content = content.replace("uv pip install --system tox tox-uv", "uv tool install tox --with tox-uv")
-        ci_yaml.write_text(content)
-
-    # labels.yml
-    file_paths = [
-        Path(".github/workflows/labels.yml"),
-        Path("project/.github/workflows/labels.yml"),
-    ]
-    for labels_yml in file_paths:
-        if not labels_yml.exists():
+        content = pyproject_toml.read_text()
+        if 'mypy_django_plugin.main' in content:
             continue
 
-        content = labels_yml.read_text()
-        if "actions/setup-python" not in content:
-            continue
+        content = content.replace("[tool.mypy]", '[tool.mypy]\nplugins = [ "mypy_django_plugin.main" ]')
+        content = content.replace('[dependency-groups]\ndev = [', '[dependency-groups]\ndev = [\n  "django-stubs>=6.0.9",\n  "mypy>=2.3",')
+        content = content.replace('[tool.pytest]', '[tool.django-stubs]\ndjango_settings_module = "tests.settings"\n\n[tool.pytest]')
+        pyproject_toml.write_text(content)
 
-        content = content.replace(LABELS_BEFORE, LABELS_AFTER)
-        content = content.replace(LABELS_BEFORE_V2, LABELS_AFTER)
-        labels_yml.write_text(content)
+        if idx == 0:
+            autofix_lib.run("uv", "lock")
 
 
 # You shouldn't need to change anything below this line
