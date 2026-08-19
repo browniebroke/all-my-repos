@@ -7,26 +7,22 @@ from all_repos import autofix_lib
 from all_repos.grep import repos_matching
 
 # Find repos that have this file...
-FILE_NAMES = [".pre-commit-config.yaml", "project/.pre-commit-config.yaml.jinja"]
+FILE_NAMES = [".github/workflows/labels.yml"]
 # ... and which content contains this string.
-FILE_CONTAINS = "https://github.com/pre-commit/mirrors-mypy"
+FILE_CONTAINS = "secrets.GH_PAT"
 # Git stuff
-GIT_COMMIT_MSG = "chore: move mypy to local hook with django stubs"
-GIT_BRANCH_NAME = "chore/mypy-local-hook"
+GIT_COMMIT_MSG = "chore: remove long-lived GitHub PAT in labels workflow"
+GIT_BRANCH_NAME = "chore/remove-gh-pat"
 
-PRE_COMMIT_BEFORE = """  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v2.3.0
-    hooks:
-      - id: mypy
-        additional_dependencies: []"""
-PRE_COMMIT_AFTER = """  - repo: local
-    hooks:
-      - id: local-mypy
-        name: mypy check
-        entry: uv run mypy src
-        require_serial: true
-        language: system
-        pass_filenames: false"""
+RUN_STEP_OLD = """
+    runs-on: ubuntu-latest
+    steps:"""
+RUN_STEPS_UPDATED  = """
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:"""
 
 
 def apply_fix():
@@ -38,37 +34,19 @@ def apply_fix():
         autofix_lib.run("uv", "sync")
     """
     # pre-commit config
-    for pre_commit_cfg in FILE_NAMES:
-        pre_commit_cfg = Path(pre_commit_cfg)
-        if not pre_commit_cfg.exists():
-            continue
-        content = pre_commit_cfg.read_text()
-        if "https://github.com/pre-commit/mirrors-mypy" not in content:
-            continue
-
-        content = content.replace(PRE_COMMIT_BEFORE, PRE_COMMIT_AFTER)
-        pre_commit_cfg.write_text(content)
-
-    # pyproject.toml
     file_paths = [
-        Path("pyproject.toml"),
-        Path("project/pyproject.toml.jinja"),
+        Path(".github/workflows/labels.yml")
     ]
-    for idx, pyproject_toml in enumerate(file_paths):
-        if not pyproject_toml.exists():
+    for labels_yml in file_paths:
+        if not labels_yml.exists():
+            continue
+        content = labels_yml.read_text()
+        if "secrets.GH_PAT" not in content:
             continue
 
-        content = pyproject_toml.read_text()
-        if 'mypy_django_plugin.main' in content:
-            continue
-
-        content = content.replace("[tool.mypy]", '[tool.mypy]\nplugins = [ "mypy_django_plugin.main" ]')
-        content = content.replace('[dependency-groups]\ndev = [', '[dependency-groups]\ndev = [\n  "django-stubs>=6.0.9",\n  "mypy>=2.3",')
-        content = content.replace('[tool.pytest]', '[tool.django-stubs]\ndjango_settings_module = "tests.settings"\n\n[tool.pytest]')
-        pyproject_toml.write_text(content)
-
-        if idx == 0:
-            autofix_lib.run("uv", "lock")
+        content = content.replace(RUN_STEP_OLD, RUN_STEPS_UPDATED)
+        content = content.replace("secrets.GH_PAT", "secrets.GITHUB_TOKEN")
+        labels_yml.write_text(content)
 
 
 # You shouldn't need to change anything below this line
