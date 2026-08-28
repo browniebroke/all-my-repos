@@ -7,22 +7,12 @@ from all_repos import autofix_lib
 from all_repos.grep import repos_matching
 
 # Find repos that have this file...
-FILE_NAMES = [".github/workflows/labels.yml"]
+FILE_NAMES = [".pre-commit-config.yaml"]
 # ... and which content contains this string.
-FILE_CONTAINS = "secrets.GH_PAT"
+FILE_CONTAINS = "https://github.com/astral-sh/ruff-pre-commit"
 # Git stuff
-GIT_COMMIT_MSG = "chore: remove long-lived GitHub PAT in labels workflow"
-GIT_BRANCH_NAME = "chore/remove-gh-pat"
-
-RUN_STEP_OLD = """
-    runs-on: ubuntu-latest
-    steps:"""
-RUN_STEPS_UPDATED  = """
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      issues: write
-    steps:"""
+GIT_COMMIT_MSG = "chore: reformat files with ruff"
+GIT_BRANCH_NAME = "chore/reformat"
 
 
 def apply_fix():
@@ -33,20 +23,7 @@ def apply_fix():
 
         autofix_lib.run("uv", "sync")
     """
-    # pre-commit config
-    file_paths = [
-        Path(".github/workflows/labels.yml")
-    ]
-    for labels_yml in file_paths:
-        if not labels_yml.exists():
-            continue
-        content = labels_yml.read_text()
-        if "secrets.GH_PAT" not in content:
-            continue
-
-        content = content.replace(RUN_STEP_OLD, RUN_STEPS_UPDATED)
-        content = content.replace("secrets.GH_PAT", "secrets.GITHUB_TOKEN")
-        labels_yml.write_text(content)
+    autofix_lib.run("prek", "run", "-a", check=False)
 
 
 # You shouldn't need to change anything below this line
