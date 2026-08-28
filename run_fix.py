@@ -11,8 +11,8 @@ FILE_NAMES = [".pre-commit-config.yaml"]
 # ... and which content contains this string.
 FILE_CONTAINS = "https://github.com/astral-sh/ruff-pre-commit"
 # Git stuff
-GIT_COMMIT_MSG = "chore: reformat files with ruff"
-GIT_BRANCH_NAME = "chore/reformat"
+GIT_COMMIT_MSG = "chore: run pre-commit hooks"
+GIT_BRANCH_NAME = "chore/prek"
 
 
 def apply_fix():
