@@ -1,53 +1,25 @@
 from __future__ import annotations
 
 import argparse
-import json
+import subprocess
 from pathlib import Path
 
 from all_repos import autofix_lib
 from all_repos.grep import repos_matching
 
-# Find repos that have this file...
-FILE_NAMES = [".github/workflows"]
+# Find repos that have this file (also matches template's project/ folder)...
+FILE_NAMES = ["*.github/workflows/labels.yml"]
 # ... and which content contains this string.
-FILE_CONTAINS = "browniebroke/github-actions/.github/workflows/ts-lint.yml"
+FILE_CONTAINS = "uvx labels "
 # Git stuff
-GIT_COMMIT_MSG = "chore: migrate from ESLint & Prettier to Oxlint & Oxfmt"
-GIT_BRANCH_NAME = "chore/oxlint-oxfmt"
+GIT_COMMIT_MSG = "chore: use labels fork ignoring archived labels"
+GIT_BRANCH_NAME = "chore/labels-fork"
 
-# Oxfmt doesn't support Prettier plugins, e.g. Astro files would stop being formatted
-UNSUPPORTED_PRETTIER_PLUGINS = ["prettier-plugin-astro", "prettier-plugin-svelte"]
-
-OLD_DEV_DEPS = [
-    "@eslint/compat",
-    "@eslint/eslintrc",
-    "@eslint/js",
-    "@typescript-eslint/parser",
-    "eslint",
-    "eslint-config-next",
-    "eslint-config-prettier",
-    "eslint-plugin-prettier",
-    "eslint-plugin-react",
-    "globals",
-    "prettier",
-]
-NEW_DEV_DEPS = ["oxlint", "oxfmt"]
-
-SCRIPTS = {
-    "format": "oxfmt",
-    "check:lint": "oxlint",
-    "check:format": "oxfmt --check",
-}
-
-DOCS_REPLACEMENTS = {
-    "Run ESLint": "Run Oxlint",
-    "Check Prettier formatting": "Check Oxfmt formatting",
-    "Auto-format with Prettier": "Auto-format with Oxfmt",
-    "enforced by Prettier": "enforced by Oxfmt",
-    "ESLint flat config (`eslint.config.mjs`) with Prettier integration": (
-        "Oxlint config (`.oxlintrc.json`) and Oxfmt config (`.oxfmtrc.json`)"
-    ),
-}
+OLD_COMMAND = "uvx labels "
+NEW_COMMAND = (
+    "uvx --with https://github.com/browniebroke/labels/archive/fix/ignore-archived-at.zip"
+    " labels "
+)
 
 
 def _should_fix_repo(repo: Path) -> bool:
@@ -58,10 +30,7 @@ def _should_fix_repo(repo: Path) -> bool:
     - True for repos where the fix should run
     - False for repos where the fix should be skipped
     """
-    package_json = (repo / "package.json").read_text()
-    if any(plugin in package_json for plugin in UNSUPPORTED_PRETTIER_PLUGINS):
-        return False
-    return (repo / "eslint.config.mjs").exists()
+    return True
 
 
 def apply_fix():
@@ -72,63 +41,13 @@ def apply_fix():
 
         autofix_lib.run("uv", "sync")
     """
-    package_json = json.loads(Path("package.json").read_text())
-    all_deps = {
-        **package_json.get("dependencies", {}),
-        **package_json.get("devDependencies", {}),
-    }
-    autofix_lib.run("npm", "ci")
-
-    # Formatter: convert Prettier config (package.json key + .prettierignore)
-    autofix_lib.run("npx", "--yes", "oxfmt@latest", "--migrate=prettier")
-    autofix_lib.run("npm", "pkg", "delete", "prettier")
-    Path(".prettierignore").unlink(missing_ok=True)
-    Path(".prettierrc").unlink(missing_ok=True)
-
-    # Linter: lean config, .gitignore is respected by default
-    oxfmt_config = json.loads(Path(".oxfmtrc.json").read_text())
-    plugins = ["typescript", "unicorn", "oxc"]
-    if "react" in all_deps:
-        plugins += ["react", "jsx-a11y"]
-    ignore_patterns = list(oxfmt_config.get("ignorePatterns", []))
-    if "next" in all_deps:
-        plugins += ["import", "nextjs"]
-        ignore_patterns.append("next-env.d.ts")
-    oxlint_config = {
-        "$schema": "./node_modules/oxlint/configuration_schema.json",
-        "plugins": plugins,
-        "categories": {"correctness": "error"},
-        "env": {"browser": True, "node": True},
-        "ignorePatterns": ignore_patterns,
-    }
-    Path(".oxlintrc.json").write_text(json.dumps(oxlint_config, indent=2) + "\n")
-    Path("eslint.config.mjs").unlink(missing_ok=True)
-
-    # Dependencies & scripts
-    to_remove = [dep for dep in OLD_DEV_DEPS if dep in all_deps]
-    autofix_lib.run("npm", "uninstall", *to_remove)
-    autofix_lib.run("npm", "install", "--save-dev", "--save-exact", *NEW_DEV_DEPS)
-    for name, command in SCRIPTS.items():
-        autofix_lib.run("npm", "pkg", "set", f"scripts.{name}={command}")
-
-    # Docs
-    for doc in [Path("CLAUDE.md"), Path("AGENTS.md"), Path("README.md")]:
-        if not doc.exists():
-            continue
-        content = doc.read_text()
-        for old, new in DOCS_REPLACEMENTS.items():
-            content = content.replace(old, new)
-        doc.write_text(content)
-
-    # Format with the new tool & ensure formatting is stable
-    autofix_lib.run("npm", "run", "format")
-    autofix_lib.run("npm", "run", "check:format")
-    # Oxlint enables more rules than the old ESLint setups (which only ran Prettier),
-    # fix what can be fixed; leftovers are reported by CI on the PR
-    autofix_lib.run("npx", "oxlint", "--fix", "--fix-suggestions", check=False)
-
-    # all-repos commits with `git commit -a`, which skips new files
-    autofix_lib.run("git", "add", ".oxlintrc.json", ".oxfmtrc.json")
+    files = subprocess.check_output(
+        ["git", "ls-files", "--", *FILE_NAMES], text=True
+    ).splitlines()
+    for file_name in files:
+        path = Path(file_name)
+        content = path.read_text()
+        path.write_text(content.replace(OLD_COMMAND, NEW_COMMAND))
 
 
 # You shouldn't need to change anything below this line
