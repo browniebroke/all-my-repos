@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import re
 import subprocess
 from pathlib import Path
 
@@ -8,18 +9,17 @@ from all_repos import autofix_lib
 from all_repos.grep import repos_matching
 
 # Find repos that have this file (also matches template's project/ folder)...
-FILE_NAMES = ["*.github/workflows/labels.yml"]
+FILE_NAMES = ["*.github/workflows/hacktoberfest.yml"]
 # ... and which content contains this string.
-FILE_CONTAINS = "uvx labels "
+FILE_CONTAINS = "github_token: ${{ secrets."
 # Git stuff
-GIT_COMMIT_MSG = "chore: use labels fork ignoring archived labels"
-GIT_BRANCH_NAME = "chore/labels-fork"
+GIT_COMMIT_MSG = "ci: use the built-in token in the Hacktoberfest workflow"
+GIT_BRANCH_NAME = "ci/hacktoberfest-token"
 
-OLD_COMMAND = "uvx labels "
-NEW_COMMAND = (
-    "uvx --with https://github.com/browniebroke/labels/archive/fix/ignore-archived-at.zip"
-    " labels "
-)
+OLD_TOKENS = ("secrets.GH_PAT", "secrets.CPR_GITHUB_TOKEN")
+NEW_TOKEN = "secrets.GITHUB_TOKEN"
+RUNS_ON_RE = re.compile(r"^(?P<indent>[ ]+)runs-on: .*$", re.MULTILINE)
+PERMISSIONS = "permissions:\n{indent}  contents: write\n{indent}  issues: write"
 
 
 def _should_fix_repo(repo: Path) -> bool:
@@ -47,7 +47,20 @@ def apply_fix():
     for file_name in files:
         path = Path(file_name)
         content = path.read_text()
-        path.write_text(content.replace(OLD_COMMAND, NEW_COMMAND))
+        if not any(token in content for token in OLD_TOKENS):
+            continue
+        for token in OLD_TOKENS:
+            content = content.replace(token, NEW_TOKEN)
+        if "permissions:" not in content:
+            content = RUNS_ON_RE.sub(
+                lambda m: (
+                    f"{m.group(0)}\n{m['indent']}"
+                    + PERMISSIONS.format(indent=m["indent"])
+                ),
+                content,
+                count=1,
+            )
+        path.write_text(content)
 
 
 # You shouldn't need to change anything below this line
