@@ -11,15 +11,10 @@ from all_repos.grep import repos_matching
 # Find repos that have this file (also matches template's project/ folder)...
 FILE_NAMES = ["*.github/workflows/hacktoberfest.yml"]
 # ... and which content contains this string.
-FILE_CONTAINS = "github_token: ${{ secrets."
+FILE_CONTAINS = "hacktoberfest-labeler-action"
 # Git stuff
-GIT_COMMIT_MSG = "ci: use the built-in token in the Hacktoberfest workflow"
-GIT_BRANCH_NAME = "ci/hacktoberfest-token"
-
-OLD_TOKENS = ("secrets.GH_PAT", "secrets.CPR_GITHUB_TOKEN")
-NEW_TOKEN = "secrets.GITHUB_TOKEN"
-RUNS_ON_RE = re.compile(r"^(?P<indent>[ ]+)runs-on: .*$", re.MULTILINE)
-PERMISSIONS = "permissions:\n{indent}  contents: write\n{indent}  issues: write"
+GIT_COMMIT_MSG = "ci: remove Hacktoberfest workflow"
+GIT_BRANCH_NAME = "ci/remove-hacktoberfest-workflow"
 
 
 def _should_fix_repo(repo: Path) -> bool:
@@ -44,23 +39,11 @@ def apply_fix():
     files = subprocess.check_output(
         ["git", "ls-files", "--", *FILE_NAMES], text=True
     ).splitlines()
+    print(f"{files=}")
     for file_name in files:
         path = Path(file_name)
-        content = path.read_text()
-        if not any(token in content for token in OLD_TOKENS):
-            continue
-        for token in OLD_TOKENS:
-            content = content.replace(token, NEW_TOKEN)
-        if "permissions:" not in content:
-            content = RUNS_ON_RE.sub(
-                lambda m: (
-                    f"{m.group(0)}\n{m['indent']}"
-                    + PERMISSIONS.format(indent=m["indent"])
-                ),
-                content,
-                count=1,
-            )
-        path.write_text(content)
+        if path.exists():
+            path.unlink()
 
 
 # You shouldn't need to change anything below this line
