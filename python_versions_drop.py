@@ -9,12 +9,12 @@ from all_repos.grep import repos_matching
 # Find repos that have this file...
 FILE_NAMES = ["pyproject.toml", "project/pyproject.toml.jinja"]
 # ... and which content contains this string.
-FILE_CONTAINS = 'requires-python = ">=3.9"'
+FILE_CONTAINS = 'requires-python = ">=3.10"'
 # Git stuff
 GIT_COMMIT_MSG = (
-    "feat: drop support for Python 3.9"
+    "feat!: drop support for Python 3.10"
 )
-GIT_BRANCH_NAME = "feat/drop-python-3.9"
+GIT_BRANCH_NAME = "feat/drop-python-3.10"
 
 
 def apply_fix():
@@ -29,7 +29,7 @@ def apply_fix():
             continue
         tox_ini_content = tox_ini.read_text()
         tox_ini_replacements = {
-            "    py39-django{42}\n": "",
+            "    py310-django{52}\n": "",
         }
         for from_str, to_str in tox_ini_replacements.items():
             tox_ini_content = tox_ini_content.replace(from_str, to_str)
@@ -45,9 +45,9 @@ def apply_fix():
             continue
         pyproject_toml_content = pyproject_toml.read_text()
         pyproject_toml_replacements = {
-            'requires-python = ">=3.9"': 'requires-python = ">=3.10"',
-            'target-version = "py39"': 'target-version = "py310"',
-            '  "Programming Language :: Python :: 3.9",\n': "",
+            'requires-python = ">=3.10"': 'requires-python = ">=3.11"',
+            'target-version = "py310"': 'target-version = "py311"',
+            '  "Programming Language :: Python :: 3.10",\n': "",
         }
         for from_str, to_str in pyproject_toml_replacements.items():
             pyproject_toml_content = pyproject_toml_content.replace(from_str, to_str)
@@ -65,7 +65,7 @@ def apply_fix():
         if not ci_yml.exists():
             continue
         ci_yml_content = ci_yml.read_text()
-        ci_yml_content = ci_yml_content.replace('          - "3.9"\n', "")
+        ci_yml_content = ci_yml_content.replace('          - "3.10"\n', "")
         ci_yml.write_text(ci_yml_content)
 
 
